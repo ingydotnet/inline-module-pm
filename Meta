@@ -1,0 +1,30 @@
+=meta: 0.0.1
+
+name: Inline-Module
+version: 0.01
+abstract: Support for Inline-based CPAN Extension Modules
+homepage: https://metacpan.org/release/Inline-Module
+
+license: perl
+copyright: 2014. Ingy döt Net.
+author:
+  name: Ingy döt Net
+  email: ingy@cpan.org
+  github: ingydotnet
+  twitter: ingydotnet
+  freenode: ingy
+  homepage: http://ingy.net
+
+requires:
+  perl: 5.8.1
+  Inline: 0
+  Inline::C: 0
+
+devel:
+  git: https://github.com/ingydotnet/inline-module-pm
+  bug: https://github.com/ingydotnet/inline-module-pm/issues
+  irc: irc.freenode.net#pkg
+
+=travis:
+  type: perl
+  irc: irc.perl.org#inline
