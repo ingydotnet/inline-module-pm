@@ -2,4 +2,4 @@
 
 use Inline::Module;
 
-Inline::Module->run(@ARGV);
+Inline::Module->new(argv => [@ARGV])->run;
