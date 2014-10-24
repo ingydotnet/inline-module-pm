@@ -3,9 +3,12 @@ Inline::Module
 
 Support for Inline-based CPAN Extension Modules
 
+<badge travis coveralls ingydotnet/inline-module-pm>
+
 = Synopsis
 
-  > perl-inline-module
+  > perl-inline-module create Module::Name::Inline
+  Inline module 'Module::Name::Inline' created as 'lib/Module/Name/Inline.pm'
 
 = Description
 
