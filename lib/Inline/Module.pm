@@ -1,6 +1,6 @@
 use strict; use warnings;
 package Inline::Module;
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 use File::Path;
 use Inline();

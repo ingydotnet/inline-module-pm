@@ -1,4 +1,9 @@
 ---
+version: 0.02
+date:    Fri Oct 24 05:04:02 UTC 2014
+changes:
+- Implement perl-inline-module command
+---
 version: 0.01
 date:    Fri Oct 24 01:48:54 UTC 2014
 changes:

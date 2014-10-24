@@ -10,9 +10,14 @@ See http://github.com/ingydotnet/swim-pm#readme
 
 Inline::Module - Support for Inline-based CPAN Extension Modules
 
+=for html
+<a href="https://travis-ci.org/ingydotnet/inline-module-pm"><img src="https://travis-ci.org/ingydotnet/inline-module-pm.png" alt="inline-module-pm"></a>
+<a href="https://coveralls.io/r/ingydotnet/inline-module-pm?branch=master"><img src="https://coveralls.io/repos/ingydotnet/inline-module-pm/badge.png" alt="inline-module-pm"></a>
+
 =head1 SYNOPSIS
 
-    > perl-inline-module
+    > perl-inline-module create Module::Name::Inline
+    Inline module 'Module::Name::Inline' created as 'lib/Module/Name/Inline.pm'
 
 =head1 DESCRIPTION
 
