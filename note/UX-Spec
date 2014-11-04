@@ -1,0 +1,41 @@
+These are the steps that a user goes through to make a Inline module and get it to CPAN.
+
+== Assumptions
+
+- Author installs these modules:
+  - Inline
+  - Inline::C (or ::CPP)
+  - Inline::Module
+- Author runs some setup commands
+- Author adds some new directive to the build system
+- The `make test` command does the right thing
+  - Runs code from blib
+  - Recompilation just works (via Inline)
+- `make dist` sets things up for a proper user installation
+  - The blib/::Inline is DynaLoader only
+  - Inline tools go into `inc/`
+
+== Steps
+
+1) Author chooses one of the following CPAN styles:
+   - ExtUtils::MakeMaker
+   - Module::Build
+   - Module::Install
+   - Dist::Zilla
+   - Zilla::Dist
+   - Distar
+
+2) Author makes a `lib/Foo/Bar.pm` module with a call like this:
+
+    use Foo::Bar::Inline => C …usual Inline params…;
+
+  The only difference here is that `Inline` becomes `Foo::Bar::Inline` which
+  is by definition, a part of the `Foo-Bar` dist.
+
+3) Author creates `lib/Foo/Bar/Inline.pm` with this tool:
+
+    perl-inline-module create Foo::Bar::Inline
+
+4) Author codes and tests with one of the following:
+  - `perl Makefile.PL; make test`
+  - `prove -lv t/`
