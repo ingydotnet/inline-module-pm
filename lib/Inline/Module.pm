@@ -74,28 +74,6 @@ sub import {
 
         my $class = shift;
         Inline->import_heavy(@_);
-
-        my $file = $inline_module;
-        $file =~ s/.*:://;
-        my $name_path = $inline_module;
-        $name_path =~ s!::!/!g;
-        File::Path::mkpath("blib/lib/$name_path");
-        open OUT, '>', "blib/lib/$name_path.pm"
-            or die $!;
-        print OUT <<"...";
-use strict; use warnings;
-package $inline_module;
-use DynaLoader;
-our \@ISA = qw( DynaLoader );
-bootstrap $inline_module;
-
-# XXX - think about this later:
-# our \$VERSION = '0.0.5';
-# bootstrap $inline_module \$VERSION;
-
-1;
-...
-        close OUT;
     };
     no strict 'refs';
     *{"${inline_module}::import"} = $importer;
@@ -139,6 +117,30 @@ use Inline::Module 'v1' => '$VERSION';
 1;
 ...
 }
+
+# sub dynaloader_module {
+#         my $file = $inline_module;
+#         $file =~ s/.*:://;
+#         my $name_path = $inline_module;
+#         $name_path =~ s!::!/!g;
+#         File::Path::mkpath("blib/lib/$name_path");
+#         open OUT, '>', "blib/lib/$name_path.pm"
+#             or die $!;
+#         print OUT <<"...";
+# use strict; use warnings;
+# package $inline_module;
+# use DynaLoader;
+# our \@ISA = qw( DynaLoader );
+# bootstrap $inline_module;
+# 
+# # XXX - think about this later:
+# # our \$VERSION = '0.0.5';
+# # bootstrap $inline_module \$VERSION;
+# 
+# 1;
+# ...
+#         close OUT;
+# }
 
 sub get_opts {
     my ($self) = @_;
