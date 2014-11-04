@@ -68,7 +68,9 @@ sub import {
         require File::Path;
         File::Path::mkpath('./blib') unless -d './blib';
         # TODO try to not use eval here:
-        eval "use Inline Config => directory => './blib'";
+        eval "use Inline Config => " .
+            "directory => './blib', " .
+            "name => '$inline_module'";
 
         my $class = shift;
         Inline->import_heavy(@_);
@@ -85,14 +87,15 @@ use strict; use warnings;
 package $inline_module;
 use DynaLoader;
 our \@ISA = qw( DynaLoader );
-our \$VERSION = '0.0.5';
-bootstrap $inline_module \$VERSION;
+bootstrap $inline_module;
+
+# XXX - think about this later:
+# our \$VERSION = '0.0.5';
+# bootstrap $inline_module \$VERSION;
+
 1;
 ...
         close OUT;
-        File::Path::mkpath("blib/arch/auto/$name_path");
-        link "blib/lib/auto/Acme/Math/XS_c2a9/XS_c2a9.so",
-            "blib/arch/auto/$name_path/$file.so";
     };
     no strict 'refs';
     *{"${inline_module}::import"} = $importer;
