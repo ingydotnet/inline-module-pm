@@ -7,11 +7,19 @@ use ExtUtils::MakeMaker();
 use Carp;
 
 our @EXPORT = qw(WriteMakefile WriteInlineMakefile);
-our $VERSION = '0.77';
 
 use XXX;
+
+$SIG{__WARN__} = sub {
+    warn ">>$_[0]<<" unless $_[0] =~ /INLINE/;
+};
+
+my $INLINE;
 sub WriteMakefile {
-    &ExtUtils::MakeMaker::WriteMakefile(@_);
+    my %args = @_;
+    $INLINE = delete $args{INLINE} or croak
+        "INLINE keyword required. See: perldoc Inline::Module::MakeMaker";
+    &ExtUtils::MakeMaker::WriteMakefile(%args);
     my $makefile = read_makefile();
     fixup_makefile($makefile);
     add_postamble($makefile);
@@ -42,9 +50,10 @@ sub add_postamble {
     my $inline_section = make_inline_section();
 
     $_[0] .= <<"...";
-# Well, not quite. Inline::Module::MakeMaker is adding this:
 
-# --- MakeMaker inline section:
+# Inline::Module::MakeMaker is adding this section:
+
+# --- MakeMaker Inline::Module section:
 
 $inline_section
 
@@ -53,20 +62,34 @@ $inline_section
 }
 
 sub make_inline_section {
-    my $distdir = 
     my $section = "distdir ::\n";
-#     for my $mod (qw{
-#         Inline::Module
-#         Inline
-#         Inline::C
-#     }) {
-#         eval "require $module; 1" or die $@;
-#         $section .= 
-#     <<'...';
-# distdir ::
-# 	@echo O HAIIIIIIIIII
-# ...
+    for my $module (included_modules()) {
+        my ($source_path, $inc_path) = include_module($module);
+        $section .= "\t\$(NOECHO) \$(CP) $source_path \$(DISTVNAME)/$inc_path\n";
+    }
+    return $section;
 }
 
-1;
+sub include_module {
+    my $module = shift;
+    eval "require $module; 1" or die $@;
+    my $path = $module;
+    $path =~ s!::!/!g;
+    my $source_path = $INC{"$path.pm"}
+        or die "XXX";
+    my $inc_path = "inc/$path.pm";
+    return ($source_path, $inc_path);
+}
 
+sub included_modules {
+    my $ilsm = $INLINE->{ILSM}
+        or croak "XXX";
+    return (
+        'Inline::Module',
+        'Inline',
+        $ilsm,
+    );
+}
+
+
+1;
