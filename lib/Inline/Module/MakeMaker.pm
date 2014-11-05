@@ -71,7 +71,7 @@ sub make_distdir_section {
         $section .= "\t\$(NOECHO) \$(CP) `$find` \$(DISTVNAME)/$inc_path\n";
     }
     my $module = $INLINE->{module};
-    $section .= qq!\t\$(NOECHO) \$(ABSPERLRUN) -MInline::Module=dist -e 1 -- $module!;
+    $section .= qq!\t\$(NOECHO) \$(ABSPERLRUN) -MInline::Module=dist -e 1 -- \$(DISTVNAME) $module!;
     return $section;
 }
 

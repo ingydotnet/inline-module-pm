@@ -32,9 +32,9 @@ These are the steps that a user goes through to make a Inline module and get it 
   The only difference here is that `Inline` becomes `Foo::Bar::Inline` which
   is by definition, a part of the `Foo-Bar` dist.
 
-3) Author creates `lib/Foo/Bar/Inline.pm` with this tool:
+3) Author generates `lib/Foo/Bar/Inline.pm` with this tool:
 
-    perl-inline-module create Foo::Bar::Inline
+    perl-inline-module generate Foo::Bar::Inline
 
 4) Author codes and tests with one of the following:
   - `perl Makefile.PL; make test`
