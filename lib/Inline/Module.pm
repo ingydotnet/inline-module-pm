@@ -41,8 +41,8 @@ sub do_generate {
 sub import {
     my $class = shift;
 
-    return $class->dist_setup()
-        if @_ == 1 and $_[0] eq 'dist';
+    return $class->handle_distdir()
+        if @_ == 1 and $_[0] eq 'distdir';
 
     return unless @_;
 
@@ -59,6 +59,7 @@ sub import {
         # TODO try to not use eval here:
         eval "use Inline Config => " .
             "directory => './blib', " .
+            "using => '::Parser::RegExp', " .
             "name => '$inline_module'";
 
         my $class = shift;
@@ -105,11 +106,44 @@ Commands:
 ...
 }
 
-sub dist_setup {
+sub handle_distdir {
     my ($class) = @_;
-    my ($distdir, $module) = @ARGV;
-    $class->write_dyna_module("$distdir/lib", $module);
-    $class->write_proxy_module("$distdir/inc", $module);
+    my ($distdir, @args) = @ARGV;
+    my (@inlined_modules, @included_modules);
+
+    while (@args and ($_ = shift(@args)) ne '--') {
+        push @inlined_modules, $_;
+    }
+    while (@args and ($_ = shift(@args)) ne '--') {
+        push @included_modules, $_;
+    }
+
+    for my $module (@inlined_modules) {
+        $class->write_dyna_module("$distdir/lib", $module);
+        $class->write_proxy_module("$distdir/inc", $module);
+    }
+    for my $module (@included_modules) {
+        $class->write_included_module("$distdir/inc", $module);
+    }
+}
+
+sub write_included_module {
+    my ($class, $dest, $module) = @_;
+    my $code = $class->read_local_module($module);
+    $class->write_module($dest, $module, $code);
+}
+
+sub read_local_module {
+    my ($class, $module) = @_;
+    eval "require $module; 1" or die $@;
+    my $file = $module;
+    $file =~ s!::!/!g;
+    my $filepath = $INC{"$file.pm"};
+    open IN, '<', $filepath
+        or die "Can't open '$filepath' for input:\n$!";
+    my $code = do {local $/; <IN>};
+    close IN;
+    return $code;
 }
 
 sub write_proxy_module {

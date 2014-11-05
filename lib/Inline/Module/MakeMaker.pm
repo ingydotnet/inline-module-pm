@@ -8,7 +8,7 @@ use Carp;
 
 our @EXPORT = qw(WriteMakefile WriteInlineMakefile);
 
-use XXX;
+#                     use XXX;
 
 # TODO This should probably become OO, rather than a package lexical:
 my $INLINE;
@@ -43,7 +43,8 @@ sub write_makefile {
 }
 
 sub fixup_makefile {
-    $_[0] =~ s/^(distdir\s*:)/$1:/m;
+    $_[0] =~ s/^(distdir\s+):(\s+)/$1::$2/m;
+    $_[0] =~ s/^(pure_all\s+):(\s+)/$1::$2/m;
 }
 
 sub add_postamble {
@@ -56,22 +57,27 @@ sub add_postamble {
 # --- MakeMaker Inline::Module sections:
 
 $inline_section
-
-# The End is here.
 ...
 }
 
 sub make_distdir_section {
-    my $section = "distdir ::\n";
-    for my $module (included_modules()) {
-        my ($path, $inc_path, $inc_dir) = include_module($module);
-        my $find =
-            qq!\$(ABSPERLRUN) -e 'require $module;print \$\$INC{"$path"}'!;
-        $section .= "\t\$(NOECHO) \$(MKPATH) \$(DISTVNAME)/$inc_dir\n";
-        $section .= "\t\$(NOECHO) \$(CP) `$find` \$(DISTVNAME)/$inc_path\n";
+    my $code_modules = $INLINE->{module};
+    $code_modules = [ $code_modules ] unless ref $code_modules;
+    my $inlined_modules = $INLINE->{inline};
+    $inlined_modules = [ $inlined_modules ] unless ref $inlined_modules;
+    my @included_modules = included_modules();
+
+    my $section = <<"...";
+distdir ::
+\t\$(NOECHO) \$(ABSPERLRUN) -MInline::Module=distdir -e 1 -- \$(DISTVNAME) @$inlined_modules -- @included_modules
+
+pure_all ::
+...
+
+    for my $module (@$code_modules) {
+        $section .=
+            "\t\$(NOECHO) \$(ABSPERLRUN) -Iinc -Ilib -e 'use $module'\n";
     }
-    my $module = $INLINE->{module};
-    $section .= qq!\t\$(NOECHO) \$(ABSPERLRUN) -MInline::Module=dist -e 1 -- \$(DISTVNAME) $module!;
     return $section;
 }
 
@@ -92,10 +98,13 @@ sub include_module {
 
 sub included_modules {
     my $ilsm = $INLINE->{ILSM}
-        or croak "XXX";
+        or croak "INLINE section requires 'ILSM' key in Makefile.PL";
+    $ilsm = [ $ilsm ] unless ref $ilsm;
     return (
         'Inline',
-        $ilsm,
+        'Inline::denter',
+        @$ilsm,
+        'Inline::C::Parser::RegExp',
         'Inline::Module',
         'Inline::Module::MakeMaker',
     );
