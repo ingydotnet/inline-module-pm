@@ -10,13 +10,13 @@ our @EXPORT = qw(WriteMakefile WriteInlineMakefile);
 
 use XXX;
 
-$SIG{__WARN__} = sub {
-    warn ">>$_[0]<<" unless $_[0] =~ /INLINE/;
-};
-
+# TODO This should probably become OO, rather than a package lexical:
 my $INLINE;
+
 sub WriteMakefile {
     my %args = @_;
+    croak "'inc' must be in \@INC. Add 'use lib \"inc\";' to Makefile.PL.\n"
+        unless grep /^inc$/, @INC;
     $INLINE = delete $args{INLINE} or croak
         "INLINE keyword required. See: perldoc Inline::Module::MakeMaker";
     &ExtUtils::MakeMaker::WriteMakefile(%args);
@@ -47,13 +47,13 @@ sub fixup_makefile {
 }
 
 sub add_postamble {
-    my $inline_section = make_inline_section();
+    my $inline_section = make_distdir_section();
 
     $_[0] .= <<"...";
 
 # Inline::Module::MakeMaker is adding this section:
 
-# --- MakeMaker Inline::Module section:
+# --- MakeMaker Inline::Module sections:
 
 $inline_section
 
@@ -61,12 +61,17 @@ $inline_section
 ...
 }
 
-sub make_inline_section {
+sub make_distdir_section {
     my $section = "distdir ::\n";
     for my $module (included_modules()) {
-        my ($source_path, $inc_path) = include_module($module);
-        $section .= "\t\$(NOECHO) \$(CP) $source_path \$(DISTVNAME)/$inc_path\n";
+        my ($path, $inc_path, $inc_dir) = include_module($module);
+        my $find =
+            qq!\$(ABSPERLRUN) -e 'require $module;print \$\$INC{"$path"}'!;
+        $section .= "\t\$(NOECHO) \$(MKPATH) \$(DISTVNAME)/$inc_dir\n";
+        $section .= "\t\$(NOECHO) \$(CP) `$find` \$(DISTVNAME)/$inc_path\n";
     }
+    my $module = $INLINE->{module};
+    $section .= qq!\t\$(NOECHO) \$(ABSPERLRUN) -MInline::Module=dist -e 1 -- $module!;
     return $section;
 }
 
@@ -76,20 +81,24 @@ sub include_module {
     my $path = $module;
     $path =~ s!::!/!g;
     my $source_path = $INC{"$path.pm"}
-        or die "XXX";
+        or die "Can't locate $path.pm in %INC";
     my $inc_path = "inc/$path.pm";
-    return ($source_path, $inc_path);
+    my $inc_dir = $path;
+    $inc_dir =~ s!(.*/).*!$1! or
+        $inc_dir = '';
+    $inc_dir = "inc/$inc_dir";
+    return ("$path.pm", $inc_path, $inc_dir);
 }
 
 sub included_modules {
     my $ilsm = $INLINE->{ILSM}
         or croak "XXX";
     return (
-        'Inline::Module',
         'Inline',
         $ilsm,
+        'Inline::Module',
+        'Inline::Module::MakeMaker',
     );
 }
-
 
 1;

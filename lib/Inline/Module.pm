@@ -3,9 +3,10 @@ package Inline::Module;
 our $VERSION = '0.02';
 
 use File::Path;
+use File::Copy;
 use Inline();
 
-# use XXX;
+use XXX;
 
 ###
 # The purpose of this module is to support:
@@ -59,6 +60,8 @@ sub create_module {
 
 sub import {
     my $class = shift;
+    return $class->dist_setup()
+        if @_ == 1 and $_[0] eq 'dist';
     return unless @_;
     my ($inline_module) = caller;
     # XXX exit here is to get cleaner error msg. Try to redo without exit.
@@ -118,30 +121,6 @@ use Inline::Module 'v1' => '$VERSION';
 ...
 }
 
-# sub dynaloader_module {
-#         my $file = $inline_module;
-#         $file =~ s/.*:://;
-#         my $name_path = $inline_module;
-#         $name_path =~ s!::!/!g;
-#         File::Path::mkpath("blib/lib/$name_path");
-#         open OUT, '>', "blib/lib/$name_path.pm"
-#             or die $!;
-#         print OUT <<"...";
-# use strict; use warnings;
-# package $inline_module;
-# use DynaLoader;
-# our \@ISA = qw( DynaLoader );
-# bootstrap $inline_module;
-# 
-# # XXX - think about this later:
-# # our \$VERSION = '0.0.5';
-# # bootstrap $inline_module \$VERSION;
-# 
-# 1;
-# ...
-#         close OUT;
-# }
-
 sub get_opts {
     my ($self) = @_;
     my $argv = $self->{argv};
@@ -162,5 +141,36 @@ Commands:
 
 ...
 }
+
+sub dist_setup {
+    my $class = shift;
+    my $module = shift @ARGV;
+    $class->write_dyna_module($module);
+    $class->write_builder_module($module);
+}
+
+sub write_dyna_module {
+    my ($class, $module) = @_;
+    my $name_path = $module;
+    $name_path =~ s!::!/!g;
+    File::Path::mkpath("blib/lib/$name_path");
+    open OUT, '>', "blib/lib/$name_path.pm"
+        or die $!;
+    print OUT <<"...";
+use strict; use warnings;
+package $module;
+use DynaLoader;
+our \@ISA = qw( DynaLoader );
+bootstrap $module;
+
+# XXX - think about this later:
+# our \$VERSION = '0.0.5';
+# bootstrap $module \$VERSION;
+
+1;
+...
+    close OUT;
+}
+
 
 1;
