@@ -1,9 +1,11 @@
 use strict; use warnings;
 package Inline::Module;
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
+use Config;
 use File::Path;
 use File::Copy;
+use File::Find;
 use Inline();
 
 #                     use XXX;
@@ -41,8 +43,17 @@ sub do_generate {
 sub import {
     my $class = shift;
 
-    return $class->handle_distdir()
-        if @_ == 1 and $_[0] eq 'distdir';
+    if (@_ == 1) {
+        my ($cmd) = @_;
+        if ($cmd =~ /^(distdir|fixblib)$/) {
+            my $method = "handle_$cmd";
+            $class->$method();
+        }
+        else {
+            die "Unknown argument '$cmd'"
+        }
+        return;
+    }
 
     return unless @_;
 
@@ -125,6 +136,27 @@ sub handle_distdir {
     for my $module (@included_modules) {
         $class->write_included_module("$distdir/inc", $module);
     }
+}
+
+sub handle_fixblib {
+    my ($class) = @_;
+    my $ext = $Config::Config{dlext};
+    -d 'blib'
+        or die "Inline::Module::fixblib expected to find 'blib' directory";
+    find({
+        wanted => sub {
+            -f or return;
+            m!^blib/(config-|\.lock$)! and unlink, return;
+            if (m!^(blib/lib/auto/.*)\.$ext$!) {
+                unlink "$1.inl", "$1.bs";
+                # XXX this deletes:
+                # -lib/auto/Acme/Math/XS/.exists
+                File::Path::rmtree 'blib/arch/auto';
+                File::Copy::move 'blib/lib/auto', 'blib/arch/auto';
+            }
+        },
+        no_chdir => 1,
+    }, 'blib');
 }
 
 sub write_included_module {

@@ -1,4 +1,10 @@
 ---
+version: 0.03
+date:    Thu Nov  6 07:11:05 UTC 2014
+changes:
+- First fully working version
+- Supports Acme::Math::XS
+---
 version: 0.02
 date:    Fri Oct 24 05:04:02 UTC 2014
 changes:

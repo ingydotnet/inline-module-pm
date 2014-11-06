@@ -78,6 +78,9 @@ pure_all ::
         $section .=
             "\t\$(NOECHO) \$(ABSPERLRUN) -Iinc -Ilib -e 'use $module'\n";
     }
+    $section .=
+        "\t\$(NOECHO) \$(ABSPERLRUN) -Iinc -MInline::Module=fixblib -e 1";
+
     return $section;
 }
 
