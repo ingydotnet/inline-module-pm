@@ -1,4 +1,9 @@
 ---
+version: 0.04
+date:    Thu Nov  6 17:26:03 PST 2014
+changes:
+- Fixed a doc glitch.
+---
 version: 0.03
 date:    Thu Nov  6 07:11:05 UTC 2014
 changes:

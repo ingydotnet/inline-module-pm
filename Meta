@@ -1,7 +1,7 @@
 =meta: 0.0.1
 
 name: Inline-Module
-version: 0.03
+version: 0.04
 abstract: Support for Inline-based CPAN Extension Modules
 homepage: https://metacpan.org/release/Inline-Module
 
@@ -23,7 +23,7 @@ requires:
 devel:
   git: https://github.com/ingydotnet/inline-module-pm
   bug: https://github.com/ingydotnet/inline-module-pm/issues
-  irc: irc.freenode.net#pkg
+  irc: irc.perl.org#inline
 
 =travis:
   type: perl
