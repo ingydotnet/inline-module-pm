@@ -1,4 +1,11 @@
 ---
+version: 0.11
+date:    Sun Nov  9 17:15:57 EST 2014
+changes:
+- Added Inline::Module::Tutorial
+- Bump version past the old Inline::Module from 2006
+- Make a note in the doc about that
+---
 version: 0.04
 date:    Thu Nov  6 17:26:03 PST 2014
 changes:

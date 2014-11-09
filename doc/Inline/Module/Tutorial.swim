@@ -1,0 +1,233 @@
+Inline::Module Tutorial
+=======================
+
+Make "XS" modules for CPAN, the easy way
+
+= Overview
+
+This tutorial will teach you how to write "extension" modules for CPAN using
+[Inline::Module]. The normal way to do this is with "XS", Perl's mechanism for
+binding C and C++ code to Perl. Inline::Module lets you do this much easier,
+avoiding the need to learn XS, but delivering results that are as robust as
+hand-written XS.
+
+= Basics
+
+The tutorial starts by showing you how an example module (that is actually on
+CPAN), was created with Inline::Module. The module is called [Acme::Math::XS],
+and its purpose (besides trivial math functions) is to demonstrate how to do
+this.
+
+== The Makefile.PL
+
+No matter which framework you use to make modules ([ExtUtils::MakeMaker],
+[Dist::Zilla]) etc, you'll need to add a little metadata to the controls. For
+now we'll just show `Makefile.PL` way:
+
+  use Inline::Module::MakeMaker;
+  WriteMakefile(
+    NAME => 'Acme::Math::XS',
+    INLINE => {
+      ILSM => 'Inline::C',
+      module => 'Acme::Math::XS',
+      inline => 'Acme::Math::XS::Inline',
+    },
+    ...
+  );
+
+So you need to use `Inline::Module::MakeMaker` instead of
+`ExtUtils::MakeMaker`, and you need to add an `INLINE` section to the
+`WriteMakefile` arguments. This is a declaration of everything that
+Inline::Module needs to know to help you out.
+
+== The Module
+
+Next we'll "inline" some C code into a Perl module called
+`lib/Acme/Math/XS.pm`. Here is the real module, but condensed a bit:
+
+  use strict; use warnings;
+  package Acme::Math::XS;
+  our $VERSION = '1.2.3';
+  use Exporter 'import';
+  our @EXPORT = qw(add subtract);
+  use Acme::Math::XS::Inline C => <<'...';
+  long add(long a, long b) { return a + b; }
+  long subtract(long a, long b) { return a - b; }
+  ...
+  1;
+
+Normally you use Inline like this:
+
+  use Inline C => '<... c code ...>';
+
+but here we just change `Inline` to `Acme::Math::XS::Inline`. This is the key
+part of how Inline::Module works. Since we want to /use/ Inline but not
+/depend/ on it when the user installs this module, we do this trick. The
+`::Inline` module is a little generated stub that knows how to do all the
+right magics.
+
+== The Inline Stub Module
+
+Next you'll need to actually generate the stub module. You only need to do
+this once. Run this command:
+
+  perl-inline-module generate Acme::Math::XS::Inline
+
+You'll get a `lib/Acme/Math/XS/Inline.pm` that looks like this:
+
+
+  use strict; use warnings;
+  package Acme::Math::XS::Inline;
+  use base 'Inline';
+  use Inline::Module 'v1' => '1.23';
+  1;
+
+The astute tutorialist will note that this module depends in `Inline` and
+`Inline::Module`, and that's a no-no. That's because this stub is used for
+author side development and testing, and another stub replaces it at module
+release time.
+
+That stub will look like this:
+
+  use strict; use warnings;
+  package Acme::Math::XS::Inline;
+  use base 'DynaLoader';
+  bootstrap Acme::Math::XS::Inline;
+  1;
+
+And everything is fine. We are just using Dynaloader, the age old loader of
+extension libraries. As long the shared library stuff gets built into the
+`blib` directory at user build time (and it does!) we are good to go.
+
+== Testing
+
+There are a few ways to test stuff and I'll describe them here. They should be
+familiar to most module authors.
+
+- `prove -lv t/`
+
+  This is the easiest and most common method of testing for *non*-XS module
+  authors. Since Inline is involved, the compilation steps just work.
+
+  With XS, you typically need to run `perl Makefile.PL && make` first, and you
+  also need to add the `-b` flag to `prove` to tell it to look in the new
+  `blib`. Then you need to continually make sure to repeat this every time you
+  change C code. With Inline, you can relax a bit.
+
+- `perl Makefile.PL && make test`
+
+  You can also use the XS style. It all works out the same.
+
+- `prove -bv t/`
+
+  In this style, you are just invoking the `blib` results directly, and Inline
+  is not involved. Use this if you want to know that no nothing is up a
+  sleeve, but don't forget that auto-compilation can't happen this way.
+
+== Making a Distribution (Tarball)
+
+Now it's time to make the final product and ship it to CPAN. The mechanics are dead simple:
+
+  perl Makefile.PL
+  make dist
+
+Same as any other module. Some magic is happening though to make it all work.
+You asked for this magic in your `Makefile.PL` changes!
+
+`Inline::Module::MakeMaker` modifies 2 targets in the Makefile:
+
+- `distdir`
+
+  This is the target that buils the distribution directory (before it is
+  tarred up).
+
+- `pure_all`
+
+  This odd sounding rule is actually the primary/default rule. It gets invoked
+  when you run:
+
+    make
+
+  without arguments. In other words, the build step.
+
+In the `distdir` phase, we need to:
+
+* Add the `Inline` modules that control building, under `inc/`:
+  * Inline::Module
+  * Inline::Module::Makemaker
+  * Inline
+  * Inline::C
+  * a couple helper modules
+
+We also need to move the test/build `lib/Acme/Math/XS/Inline.pm` under `inc/`
+and put the `Dynaloader` version in its place under `lib`.
+
+The `pure_all` phase is simply tweaked to rearrange the exact location of
+things that get generated under `blib`. Then they are ready to be installed
+properly/normally by `make install`.
+
+== Ship It
+
+Assuming you've done all the other parts of normal CPAN modules authoring, we
+are done here. Upload your module and watch CPAN Testers for results on tons
+of different platforms.
+
+= Using Other CPAN Build Platforms
+
+This section will describe how to do everything we just did, using the other
+popular CPAN build systems, like [Dist::Zilla].
+
+== [Dist::Zilla]
+
+Let's start with this one, since it is so popular…
+
+*To be continued…*
+
+== [Module::Build]
+
+*To be continued…*
+
+== [Module::Install]
+
+*To be continued…*
+
+== [Zilla::Dist]
+
+*To be continued…*
+
+== [Distar]
+
+*To be continued…*
+
+= External Files
+
+How to do this, but have your C/C++ in external files…
+
+= External Libraries
+
+How to write modules that bind exteral libraries (like `libyaml`)…
+
+= Inline::CPP Specifics
+
+Things that change when you use `C++`…
+
+= Using languages other than `C` and `C++`
+
+It /may/ be possible (though highly experimental) to use other Inline Language
+Support Modules (ILSMs), like Java or Python. This section will talk about
+that…
+
+= Document Status
+
+This document reflects the current state of `Inline::Module`. At this time, it
+is brand new, and thus many sections can't be written yet. This will change
+soon, and this document will be kept up to date with all the changes.
+
+= Authors
+
+* Ingy döt Net <ingy@cpan.org>
+* David Oswald <davido@cpan.org>
+
+= Copyright
+
+Copyright 2014. Ingy döt Net.
