@@ -70,7 +70,7 @@ sub import {
         # TODO try to not use eval here:
         eval "use Inline Config => " .
             "directory => './blib', " .
-            "using => '::Parser::RegExp', " .
+            "using => 'Inline::C::Parser::RegExp', " .
             "name => '$inline_module'";
 
         my $class = shift;
