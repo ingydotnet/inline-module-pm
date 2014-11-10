@@ -233,6 +233,7 @@ sub write_module {
     $dirpath =~ s!(.*)/.*!$1!;
     File::Path::mkpath($dirpath);
 
+    unlink $filepath;
     open OUT, '>', $filepath
         or die "Can't open '$filepath' for output:\n$!";
     print OUT $text;
