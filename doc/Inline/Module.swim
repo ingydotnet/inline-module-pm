@@ -27,6 +27,7 @@ http://news.perlfoundation.org/2014/09/grant-proposal-inlinecpp-modul.html
 = See
 
 * [Inline::Module::Tutorial]
+* [Inline::Module::MakeMaker]
 * [Inline]
 * [Inline::C]
 * [Inline::CPP]

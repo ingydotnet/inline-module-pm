@@ -6,24 +6,33 @@ use Exporter 'import';
 use ExtUtils::MakeMaker();
 use Carp;
 
-our @EXPORT = qw(WriteMakefile WriteInlineMakefile);
+our @EXPORT = qw(FixMakefile);
 
 #                     use XXX;
 
 # TODO This should probably become OO, rather than a package lexical:
 my $INLINE;
 
-sub WriteMakefile {
+sub FixMakefile {
     my %args = @_;
     croak "'inc' must be in \@INC. Add 'use lib \"inc\";' to Makefile.PL.\n"
         unless grep /^inc$/, @INC;
-    $INLINE = delete $args{INLINE} or croak
-        "INLINE keyword required. See: perldoc Inline::Module::MakeMaker";
-    &ExtUtils::MakeMaker::WriteMakefile(%args);
+    $INLINE = default_args(\%args);
     my $makefile = read_makefile();
     fixup_makefile($makefile);
     add_postamble($makefile);
     write_makefile($makefile);
+}
+
+sub default_args {
+    my $args = shift;
+    croak "FixMakefile requires 'module' argument.\n"
+        unless $args->{module};
+    $args->{module} = [ $args->{module} ] unless ref $args->{module};
+    $args->{inline} ||= [ map "${_}::Inline", @{$args->{module}} ];
+    $args->{inline} = [ $args->{inline} ] unless ref $args->{inline};
+    $args->{ILSM} ||= 'Inline::C';
+    return $args;
 }
 
 sub read_makefile {
@@ -62,9 +71,7 @@ $inline_section
 
 sub make_distdir_section {
     my $code_modules = $INLINE->{module};
-    $code_modules = [ $code_modules ] unless ref $code_modules;
     my $inlined_modules = $INLINE->{inline};
-    $inlined_modules = [ $inlined_modules ] unless ref $inlined_modules;
     my @included_modules = included_modules();
 
     my $section = <<"...";

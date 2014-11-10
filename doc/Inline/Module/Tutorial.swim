@@ -25,20 +25,22 @@ No matter which framework you use to make modules ([ExtUtils::MakeMaker],
 now we'll just show `Makefile.PL` way:
 
   use Inline::Module::MakeMaker;
+  use lib 'inc'; use Inline::Module::MakeMaker;
   WriteMakefile(
     NAME => 'Acme::Math::XS',
-    INLINE => {
-      ILSM => 'Inline::C',
-      module => 'Acme::Math::XS',
-      inline => 'Acme::Math::XS::Inline',
-    },
     ...
   );
 
-So you need to use `Inline::Module::MakeMaker` instead of
-`ExtUtils::MakeMaker`, and you need to add an `INLINE` section to the
-`WriteMakefile` arguments. This is a declaration of everything that
-Inline::Module needs to know to help you out.
+  FixMakefile(
+    ILSM => 'Inline::C',
+    module => 'Acme::Math::XS',
+    inline => 'Acme::Math::XS::Inline',
+  );
+
+
+So you need to use `Inline::Module::MakeMaker` and call `FixMakefile` after
+`WriteMakefile`. The arguments specify the information the [Inline::Module]
+needs to do the right things. See [Inline::Module::MakeMaker] for more info.
 
 == The Module
 
