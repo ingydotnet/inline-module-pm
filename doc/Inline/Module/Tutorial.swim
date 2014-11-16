@@ -1,5 +1,5 @@
-Inline::Module Tutorial
-=======================
+Inline::Module::Tutorial
+========================
 
 Make "XS" modules for CPAN, the easy way
 
@@ -25,18 +25,17 @@ No matter which framework you use to make modules ([ExtUtils::MakeMaker],
 now we'll just show `Makefile.PL` way:
 
   use Inline::Module::MakeMaker;
-  use lib 'inc'; use Inline::Module::MakeMaker;
   WriteMakefile(
     NAME => 'Acme::Math::XS',
     ...
   );
 
+  use lib 'inc'; use Inline::Module::MakeMaker;
   FixMakefile(
-    ILSM => 'Inline::C',
     module => 'Acme::Math::XS',
     inline => 'Acme::Math::XS::Inline',
+    ILSM => 'Inline::C',
   );
-
 
 So you need to use `Inline::Module::MakeMaker` and call `FixMakefile` after
 `WriteMakefile`. The arguments specify the information the [Inline::Module]

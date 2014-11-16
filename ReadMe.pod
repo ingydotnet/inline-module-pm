@@ -39,6 +39,8 @@ L<http://news.perlfoundation.org/2014/09/grant-proposal-inlinecpp-modul.html>
 
 =item * L<Inline::Module::Tutorial>
 
+=item * L<Inline::Module::MakeMaker>
+
 =item * L<Inline>
 
 =item * L<Inline::C>
