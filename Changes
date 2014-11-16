@@ -1,4 +1,9 @@
 ---
+version: 0.13
+date:    Sun Nov 16 14:36:34 PST 2014
+changes:
+- Fixed issue #4. Fix tutorial wording.
+---
 version: 0.12
 date:    Sat Nov 15 23:09:59 PST 2014
 changes:

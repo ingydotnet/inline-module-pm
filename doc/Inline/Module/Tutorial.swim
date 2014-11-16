@@ -24,13 +24,14 @@ No matter which framework you use to make modules ([ExtUtils::MakeMaker],
 [Dist::Zilla]) etc, you'll need to add a little metadata to the controls. For
 now we'll just show `Makefile.PL` way:
 
-  use Inline::Module::MakeMaker;
+  use ExtUtils::MakeMaker;
   WriteMakefile(
     NAME => 'Acme::Math::XS',
     ...
   );
 
-  use lib 'inc'; use Inline::Module::MakeMaker;
+  use lib 'inc';
+  use Inline::Module::MakeMaker;
   FixMakefile(
     module => 'Acme::Math::XS',
     inline => 'Acme::Math::XS::Inline',
@@ -40,6 +41,10 @@ now we'll just show `Makefile.PL` way:
 So you need to use `Inline::Module::MakeMaker` and call `FixMakefile` after
 `WriteMakefile`. The arguments specify the information the [Inline::Module]
 needs to do the right things. See [Inline::Module::MakeMaker] for more info.
+
+NOTE: You also need to add `inc` to @INC, even if doesn't exist while you are
+developing and testing. It will exist when you ship it to CPAN, and the `make
+install` process needs it to work properly.
 
 == The Module
 
@@ -57,7 +62,7 @@ Next we'll "inline" some C code into a Perl module called
   ...
   1;
 
-Normally you use Inline like this:
+Normally you use [Inline::C] like this:
 
   use Inline C => '<... c code ...>';
 
