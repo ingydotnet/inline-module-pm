@@ -23,6 +23,7 @@ our @EXPORT = qw(FixMakefile);
 
 sub default_args {
     my ($self, $args) = @_;
+    $args = $args->{inline} or die;
     $args->{module} = $self->{NAME} unless $args->{module};
     $args->{module} = [ $args->{module} ] unless ref $args->{module};
     $args->{inline} ||= [ map "${_}::Inline", @{$args->{module}} ];
