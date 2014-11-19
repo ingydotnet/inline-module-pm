@@ -35,7 +35,7 @@ now we'll just show `Makefile.PL` way:
   FixMakefile(
     module => 'Acme::Math::XS',
     inline => 'Acme::Math::XS::Inline',
-    ILSM => 'Inline::C',
+    ilsm => 'Inline::C',
   );
 
 So you need to use `Inline::Module::MakeMaker` and call `FixMakefile` after

@@ -42,12 +42,13 @@ Arguments are key/value pairs.
   value defaults to the `module` argument with '::Inline' appended. It can be
   an array ref of multiple modules.
 
-- `ILSM`
+- `ilsm`
 
-    ILSM => 'Inline::CPP',
+    ilsm => 'Inline::CPP',
 
-  Optional. This is the Inline Language Support Module (ILSM) that you are
-  using. It defaults to [Inline::C]. It can be an array ref of multiple ILSMs.
+  Optional. This is the Inline Language Support Module (ilsm) that you are
+  using. It defaults to [Inline::C]. It can be an array ref of multiple
+  ilsm-s.
 
 = See
 
