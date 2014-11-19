@@ -1,5 +1,4 @@
-use strict;
-use warnings;
+use strict; use warnings;
 package Inline::Module::MakeMaker;
 
 use Exporter 'import';
@@ -8,43 +7,55 @@ use Carp;
 
 our @EXPORT = qw(FixMakefile);
 
-#                     use XXX;
-
-# TODO This should probably become OO, rather than a package lexical:
-my $INLINE;
-
-sub FixMakefile {
-    my %args = @_;
-    croak "'inc' must be in \@INC. Add 'use lib \"inc\";' to Makefile.PL.\n"
-        unless grep /^inc$/, @INC;
-    $INLINE = default_args(\%args);
-    my $makefile = read_makefile();
-    fixup_makefile($makefile);
-    add_postamble($makefile);
-    write_makefile($makefile);
+sub new {
+    my $class = shift;
+    return bless {@_}, $class;
 }
 
-sub default_args {
-    my $args = shift;
+sub FixMakefile {
+    my $self = __PACKAGE__->new(@_);
+
+    croak "'inc' must be in \@INC. Add 'use lib \"inc\";' to Makefile.PL.\n"
+        unless grep /^inc$/, @INC;
     croak "FixMakefile requires 'module' argument.\n"
-        unless $args->{module};
-    $args->{module} = [ $args->{module} ] unless ref $args->{module};
-    $args->{inline} ||= [ map "${_}::Inline", @{$args->{module}} ];
-    $args->{inline} = [ $args->{inline} ] unless ref $args->{inline};
-    $args->{ILSM} ||= 'Inline::C';
-    return $args;
+        unless $self->{module};
+
+    $self->fix_makefile;
+}
+
+sub fix_makefile {
+    my ($self) = @_;
+
+    $self->set_default_args;
+    $self->read_makefile;
+    $self->fixup_makefile;
+    $self->add_postamble;
+    $self->write_makefile;
+}
+
+sub set_default_args {
+    my ($self) = @_;
+
+    $self->{module} = [ $self->{module} ] unless ref $self->{module};
+    $self->{inline} ||= [ map "${_}::Inline", @{$self->{module}} ];
+    $self->{inline} = [ $self->{inline} ] unless ref $self->{inline};
+    $self->{ilsm} ||= 'Inline::C';
+    $self->{ilsm} = [ $self->{ilsm} ] unless ref $self->{ilsm};
 }
 
 sub read_makefile {
+    my ($self) = @_;
+
     open MF_IN, '<', 'Makefile'
         or croak "Can't open 'Makefile' for input:\n$!";
-    my $makefile = do {local $/; <MF_IN>};
+    $self->{makefile} = do {local $/; <MF_IN>};
     close MF_IN;
-    return $makefile;
 }
 
 sub write_makefile {
-    my $makefile = shift;
+    my ($self) = @_;
+
+    my $makefile = $self->{makefile};
     open MF_OUT, '>', 'Makefile'
         or croak "Can't open 'Makefile' for output:\n$!";
     print MF_OUT $makefile;
@@ -52,14 +63,18 @@ sub write_makefile {
 }
 
 sub fixup_makefile {
-    $_[0] =~ s/^(distdir\s+):(\s+)/$1::$2/m;
-    $_[0] =~ s/^(pure_all\s+):(\s+)/$1::$2/m;
+    my ($self) = @_;
+
+    $self->{makefile} =~ s/^(distdir\s+):(\s+)/$1::$2/m;
+    $self->{makefile} =~ s/^(pure_all\s+):(\s+)/$1::$2/m;
 }
 
 sub add_postamble {
-    my $inline_section = make_distdir_section();
+    my ($self) = @_;
 
-    $_[0] .= <<"...";
+    my $inline_section = $self->make_distdir_section();
+
+    $self->{makefile} .= <<"...";
 
 # Inline::Module::MakeMaker is adding this section:
 
@@ -70,9 +85,11 @@ $inline_section
 }
 
 sub make_distdir_section {
-    my $code_modules = $INLINE->{module};
-    my $inlined_modules = $INLINE->{inline};
-    my @included_modules = included_modules();
+    my ($self) = @_;
+
+    my $code_modules = $self->{module};
+    my $inlined_modules = $self->{inline};
+    my @included_modules = $self->included_modules();
 
     my $section = <<"...";
 distdir ::
@@ -92,6 +109,8 @@ pure_all ::
 }
 
 sub include_module {
+    my ($self) = @_;
+
     my $module = shift;
     eval "require $module; 1" or die $@;
     my $path = $module;
@@ -107,13 +126,12 @@ sub include_module {
 }
 
 sub included_modules {
-    my $ilsm = $INLINE->{ILSM}
-        or croak "INLINE section requires 'ILSM' key in Makefile.PL";
-    $ilsm = [ $ilsm ] unless ref $ilsm;
+    my ($self) = @_;
+
     return (
         'Inline',
         'Inline::denter',
-        @$ilsm,
+        @{$self->{ilsm}},
         'Inline::C::Parser::RegExp',
         'Inline::Module',
         'Inline::Module::MakeMaker',
