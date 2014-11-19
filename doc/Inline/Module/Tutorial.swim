@@ -31,16 +31,16 @@ now we'll just show `Makefile.PL` way:
   );
 
   use lib 'inc';
-  use Inline::Module::MakeMaker;
+  use Inline::Module;
   FixMakefile(
     module => 'Acme::Math::XS',
     inline => 'Acme::Math::XS::Inline',
     ilsm => 'Inline::C',
   );
 
-So you need to use `Inline::Module::MakeMaker` and call `FixMakefile` after
+So you need to use `Inline::Module` and call `FixMakefile` after
 `WriteMakefile`. The arguments specify the information the [Inline::Module]
-needs to do the right things. See [Inline::Module::MakeMaker] for more info.
+needs to do the right things.
 
 NOTE: You also need to add `inc` to @INC, even if doesn't exist while you are
 developing and testing. It will exist when you ship it to CPAN, and the `make
@@ -140,7 +140,7 @@ Now it's time to make the final product and ship it to CPAN. The mechanics are d
 Same as any other module. Some magic is happening though to make it all work.
 You asked for this magic in your `Makefile.PL` changes!
 
-`Inline::Module::MakeMaker` modifies 2 targets in the Makefile:
+`Inline::Module` modifies 2 targets in the Makefile:
 
 - `distdir`
 

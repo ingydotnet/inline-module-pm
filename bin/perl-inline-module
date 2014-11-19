@@ -1,5 +1,5 @@
 #!/usr/bin/env perl
 
-use Inline::Module;
+use Inline::Module();
 
 Inline::Module->new(argv => [@ARGV])->run;

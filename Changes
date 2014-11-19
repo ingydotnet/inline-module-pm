@@ -1,4 +1,10 @@
 ---
+version: 0.14
+date:    Wed Nov 19 06:29:48 UTC 2014
+changes:
+- Merge Inline::Module::MakeMaker in Inline::Module
+- Make all code be OO
+---
 version: 0.13
 date:    Sun Nov 16 14:36:34 PST 2014
 changes:
