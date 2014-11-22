@@ -1,6 +1,6 @@
 use strict; use warnings;
 package Inline::Module;
-our $VERSION = '0.14';
+our $VERSION = '0.15';
 
 use Config;
 use File::Path;
@@ -9,46 +9,27 @@ use File::Find;
 use Inline();
 use Carp;
 
-#                     use XXX;
+# use XXX;
 
 sub new {
     my $class = shift;
     return bless {@_}, $class;
 }
 
-sub run {
-    my ($self) = @_;
-    $self->get_opts;
-    my $method = "do_$self->{command}";
-    die usage() unless $self->can($method);
-    $self->$method;
-}
-
-sub do_generate {
-    my ($self) = @_;
-    my @modules = @{$self->{args}};
-    die "'generate' requires at least one module name to generate\n"
-        unless @modules >= 1;
-    # Check module names first:
-    for my $module (@modules) {
-        die "Invalid module name '$module'"
-            unless $module =~ /^[A-Za-z]\w*(?:::[A-Za-z]\w*)*$/;
-    }
-    # Generate requested modules:
-    for my $module (@modules) {
-        my $filepath = $self->write_proxy_module('lib', $module);
-        print "Inline module '$module' generated as '$filepath'\n";
-    }
-}
-
+#------------------------------------------------------------------------------
+# This import serves multiple roles:
+# - bin/perl-inline-module
+# - ::Inline module's proxy to Inline.pm
+# - Makefile.PL postamble
+# - Makefile rule support
+#------------------------------------------------------------------------------
 sub import {
     my $class = shift;
 
     my @caller = caller;
     if ($caller[1] eq 'Makefile.PL') {
-        my $pkg = $caller[0];
-        no strict 'refs';
-        *{"${pkg}::FixMakefile"} = \&FixMakefile;
+        no warnings 'once';
+        *MY::postamble = \&postamble;
         return;
     }
 
@@ -94,6 +75,8 @@ sub check_api_version {
     if ($api_version ne 'v1' or $inline_module_version ne $VERSION) {
         warn <<"...";
 It seems that '$inline_module' is out of date.
+It is using Inline::Module version '$inline_module_version'.
+You have Inline::Module version '$VERSION' installed.
 
 Make sure you have the latest version of Inline::Module installed, then run:
 
@@ -105,14 +88,15 @@ Make sure you have the latest version of Inline::Module installed, then run:
     return 1;
 }
 
-sub get_opts {
+#------------------------------------------------------------------------------
+# Script section (bin/perl-inline-module)
+#------------------------------------------------------------------------------
+sub run {
     my ($self) = @_;
-    my $argv = $self->{argv};
-    die usage() unless @$argv >= 1;
-    my ($command, @args) = @$argv;
-    $self->{command} = $command;
-    $self->{args} = \@args;
-    delete $self->{argv};
+    $self->get_opts;
+    my $method = "do_$self->{command}";
+    die usage() unless $self->can($method);
+    $self->$method;
 }
 
 sub usage {
@@ -126,6 +110,95 @@ Commands:
 ...
 }
 
+sub get_opts {
+    my ($self) = @_;
+    my $argv = $self->{argv};
+    die usage() unless @$argv >= 1;
+    my ($command, @args) = @$argv;
+    $self->{command} = $command;
+    $self->{args} = \@args;
+    delete $self->{argv};
+}
+
+sub do_generate {
+    my ($self) = @_;
+    my @modules = @{$self->{args}};
+    die "'generate' requires at least one module name to generate\n"
+        unless @modules >= 1;
+    # Check module names first:
+    for my $module (@modules) {
+        die "Invalid module name '$module'"
+            unless $module =~ /^[A-Za-z]\w*(?:::[A-Za-z]\w*)*$/;
+    }
+    # Generate requested modules:
+    for my $module (@modules) {
+        my $filepath = $self->write_proxy_module('lib', $module);
+        print "Inline module '$module' generated as '$filepath'\n";
+    }
+}
+
+#------------------------------------------------------------------------------
+# postamble methods
+#------------------------------------------------------------------------------
+sub postamble {
+    my ($makemaker, %args) = @_;
+
+    my $inline = $args{inline}
+        or croak "'postamble' section requires 'inline' key in Makefile.PL";
+    croak "postamble 'inline' section requires 'module' key in Makefile.PL"
+        unless $inline->{module};
+
+    my $self = Inline::Module->new;
+    $self->default_args($inline, $makemaker);
+
+    my $code_modules = $self->{module};
+    my $inlined_modules = $self->{inline};
+    my @included_modules = $self->included_modules;
+
+    my $section = <<"...";
+distdir : distdir_inline
+
+distdir_inline : create_distdir
+\t\$(NOECHO) \$(ABSPERLRUN) -MInline::Module=distdir -e 1 -- \$(DISTVNAME) @$inlined_modules -- @included_modules
+
+pure_all ::
+...
+    for my $module (@$code_modules) {
+        $section .=
+            "\t\$(NOECHO) \$(ABSPERLRUN) -Iinc -Ilib -e 'use $module'\n";
+    }
+    $section .=
+        "\t\$(NOECHO) \$(ABSPERLRUN) -Iinc -MInline::Module=fixblib -e 1";
+
+    return $section;
+}
+
+sub default_args {
+    my ($self, $args, $makemaker) = @_;
+    $args->{module} = $makemaker->{NAME} unless $args->{module};
+    $args->{module} = [ $args->{module} ] unless ref $args->{module};
+    $args->{inline} ||= [ map "${_}::Inline", @{$args->{module}} ];
+    $args->{inline} = [ $args->{inline} ] unless ref $args->{inline};
+    $args->{ilsm} ||= 'Inline::C';
+    $args->{ilsm} = [ $args->{ilsm} ] unless ref $args->{ilsm};
+    %$self = %$args;
+}
+
+sub included_modules {
+    my ($self) = @_;
+
+    return (
+        'Inline',
+        'Inline::denter',
+        @{$self->{ilsm}},
+        'Inline::C::Parser::RegExp',
+        'Inline::Module',
+    );
+}
+
+#------------------------------------------------------------------------------
+# Class methods.
+#------------------------------------------------------------------------------
 sub handle_distdir {
     my ($class) = @_;
     my ($distdir, @args) = @ARGV;
@@ -249,131 +322,6 @@ sub write_module {
     close OUT;
 
     return $filepath;
-}
-
-sub FixMakefile {
-    my $self = __PACKAGE__->new(@_);
-
-    croak "'inc' must be in \@INC. Add 'use lib \"inc\";' to Makefile.PL.\n"
-        unless grep /^inc$/, @INC;
-    croak "FixMakefile requires 'module' argument.\n"
-        unless $self->{module};
-
-    $self->fix_makefile;
-}
-
-sub fix_makefile {
-    my ($self) = @_;
-
-    $self->set_default_args;
-    $self->read_makefile;
-    $self->fixup_makefile;
-    $self->add_postamble;
-    $self->write_makefile;
-}
-
-sub set_default_args {
-    my ($self) = @_;
-
-    $self->{module} = [ $self->{module} ] unless ref $self->{module};
-    $self->{inline} ||= [ map "${_}::Inline", @{$self->{module}} ];
-    $self->{inline} = [ $self->{inline} ] unless ref $self->{inline};
-    $self->{ilsm} ||= 'Inline::C';
-    $self->{ilsm} = [ $self->{ilsm} ] unless ref $self->{ilsm};
-}
-
-sub read_makefile {
-    my ($self) = @_;
-
-    open MF_IN, '<', 'Makefile'
-        or croak "Can't open 'Makefile' for input:\n$!";
-    $self->{makefile} = do {local $/; <MF_IN>};
-    close MF_IN;
-}
-
-sub write_makefile {
-    my ($self) = @_;
-
-    my $makefile = $self->{makefile};
-    open MF_OUT, '>', 'Makefile'
-        or croak "Can't open 'Makefile' for output:\n$!";
-    print MF_OUT $makefile;
-    close MF_OUT;
-}
-
-sub fixup_makefile {
-    my ($self) = @_;
-
-    $self->{makefile} =~ s/^(distdir\s+):(\s+)/$1::$2/m;
-    $self->{makefile} =~ s/^(pure_all\s+):(\s+)/$1::$2/m;
-}
-
-sub add_postamble {
-    my ($self) = @_;
-
-    my $inline_section = $self->make_distdir_section();
-
-    $self->{makefile} .= <<"...";
-
-# Inline::Module is adding this section:
-
-# --- MakeMaker Inline::Module sections:
-
-$inline_section
-...
-}
-
-sub make_distdir_section {
-    my ($self) = @_;
-
-    my $code_modules = $self->{module};
-    my $inlined_modules = $self->{inline};
-    my @included_modules = $self->included_modules();
-
-    my $section = <<"...";
-distdir ::
-\t\$(NOECHO) \$(ABSPERLRUN) -MInline::Module=distdir -e 1 -- \$(DISTVNAME) @$inlined_modules -- @included_modules
-
-pure_all ::
-...
-
-    for my $module (@$code_modules) {
-        $section .=
-            "\t\$(NOECHO) \$(ABSPERLRUN) -Iinc -Ilib -e 'use $module'\n";
-    }
-    $section .=
-        "\t\$(NOECHO) \$(ABSPERLRUN) -Iinc -MInline::Module=fixblib -e 1";
-
-    return $section;
-}
-
-sub include_module {
-    my ($self) = @_;
-
-    my $module = shift;
-    eval "require $module; 1" or die $@;
-    my $path = $module;
-    $path =~ s!::!/!g;
-    my $source_path = $INC{"$path.pm"}
-        or die "Can't locate $path.pm in %INC";
-    my $inc_path = "inc/$path.pm";
-    my $inc_dir = $path;
-    $inc_dir =~ s!(.*/).*!$1! or
-        $inc_dir = '';
-    $inc_dir = "inc/$inc_dir";
-    return ("$path.pm", $inc_path, $inc_dir);
-}
-
-sub included_modules {
-    my ($self) = @_;
-
-    return (
-        'Inline',
-        'Inline::denter',
-        @{$self->{ilsm}},
-        'Inline::C::Parser::RegExp',
-        'Inline::Module',
-    );
 }
 
 1;

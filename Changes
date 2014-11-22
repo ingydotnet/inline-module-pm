@@ -1,4 +1,9 @@
 ---
+version: 0.15
+date:    Sat Nov 22 05:02:50 UTC 2014
+changes:
+- Merge in leont++ postamble patches
+---
 version: 0.14
 date:    Wed Nov 19 06:29:48 UTC 2014
 changes:
