@@ -1,6 +1,6 @@
 use strict; use warnings;
 package Inline::Module;
-our $VERSION = '0.15';
+our $VERSION = '0.16';
 
 use Config;
 use File::Path;
@@ -148,7 +148,7 @@ sub postamble {
     croak "postamble 'inline' section requires 'module' key in Makefile.PL"
         unless $inline->{module};
 
-    my $self = Inline::Module->new;
+    my $self = $Inline::Module::Self = Inline::Module->new;
     $self->default_args($inline, $makemaker);
 
     my $code_modules = $self->{module};

@@ -24,23 +24,27 @@ No matter which framework you use to make modules ([ExtUtils::MakeMaker],
 [Dist::Zilla]) etc, you'll need to add a little metadata to the controls. For
 now we'll just show `Makefile.PL` way:
 
+  use lib 'inc';
   use ExtUtils::MakeMaker;
+  use Inline::Module;
+
   WriteMakefile(
     NAME => 'Acme::Math::XS',
     ...
+    postamble => {
+      inline => {
+        module => 'Acme::Math::XS',
+        inline => 'Acme::Math::XS::Inline',
+        ilsm => 'Inline::C',
+      },
+    },
   );
 
-  use lib 'inc';
-  use Inline::Module;
-  FixMakefile(
-    module => 'Acme::Math::XS',
-    inline => 'Acme::Math::XS::Inline',
-    ilsm => 'Inline::C',
-  );
 
-So you need to use `Inline::Module` and call `FixMakefile` after
-`WriteMakefile`. The arguments specify the information the [Inline::Module]
-needs to do the right things.
+So you need to use `Inline::Module` and add a `postamble` section with an
+`inline` section (with at least a `module` name) to `WriteMakefile`. The
+arguments specify the information the [Inline::Module] needs to do the right
+things.
 
 NOTE: You also need to add `inc` to @INC, even if doesn't exist while you are
 developing and testing. It will exist when you ship it to CPAN, and the `make
@@ -88,7 +92,7 @@ You'll get a `lib/Acme/Math/XS/Inline.pm` that looks like this:
   use Inline::Module 'v1' => '1.23';
   1;
 
-The astute tutorialist will note that this module depends in `Inline` and
+The astute tutorialist will note that this module depends on `Inline` and
 `Inline::Module`, and that's a no-no. That's because this stub is used for
 author side development and testing, and another stub replaces it at module
 release time.
