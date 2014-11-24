@@ -1,4 +1,9 @@
 ---
+version: 0.17
+date:    Mon Nov 24 10:27:25 PST 2014
+changes:
+- Change Contributing to About
+---
 version: 0.16
 date:    Sat Nov 22 07:29:34 UTC 2014
 changes:
