@@ -9,7 +9,7 @@ use File::Find;
 use Inline();
 use Carp;
 
-# use XXX;
+use XXX;
 
 sub new {
     my $class = shift;
@@ -26,8 +26,15 @@ sub new {
 sub import {
     my $class = shift;
 
-    my @caller = caller;
-    if ($caller[1] eq 'Makefile.PL') {
+    my ($inline_module, $program) = caller;
+    if (@_ == 1 and $_[0] =~ /^b?lib$/) {
+        if (-d 'lib') {
+            unshift @INC, 'lib';
+            push @INC, $class->module_maker(@_);
+        }
+        return;
+    }
+    elsif ($program eq 'Makefile.PL') {
         no warnings 'once';
         *MY::postamble = \&postamble;
         return;
@@ -46,8 +53,6 @@ sub import {
     }
 
     return unless @_;
-
-    my ($inline_module) = caller;
 
     # XXX 'exit' is used to get a cleaner error msg.
     # Try to redo this without 'exit'.
@@ -89,56 +94,7 @@ Make sure you have the latest version of Inline::Module installed, then run:
 }
 
 #------------------------------------------------------------------------------
-# Script section (bin/perl-inline-module)
-#------------------------------------------------------------------------------
-sub run {
-    my ($self) = @_;
-    $self->get_opts;
-    my $method = "do_$self->{command}";
-    die usage() unless $self->can($method);
-    $self->$method;
-}
-
-sub usage {
-    <<'...';
-Usage:
-        perl-inline-module <command> [<arguments>]
-
-Commands:
-        perl-inline-module generate Module::Name::Inline
-
-...
-}
-
-sub get_opts {
-    my ($self) = @_;
-    my $argv = $self->{argv};
-    die usage() unless @$argv >= 1;
-    my ($command, @args) = @$argv;
-    $self->{command} = $command;
-    $self->{args} = \@args;
-    delete $self->{argv};
-}
-
-sub do_generate {
-    my ($self) = @_;
-    my @modules = @{$self->{args}};
-    die "'generate' requires at least one module name to generate\n"
-        unless @modules >= 1;
-    # Check module names first:
-    for my $module (@modules) {
-        die "Invalid module name '$module'"
-            unless $module =~ /^[A-Za-z]\w*(?:::[A-Za-z]\w*)*$/;
-    }
-    # Generate requested modules:
-    for my $module (@modules) {
-        my $filepath = $self->write_proxy_module('lib', $module);
-        print "Inline module '$module' generated as '$filepath'\n";
-    }
-}
-
-#------------------------------------------------------------------------------
-# postamble methods
+# The postamble methods:
 #------------------------------------------------------------------------------
 sub postamble {
     my ($makemaker, %args) = @_;
@@ -199,6 +155,31 @@ sub included_modules {
 #------------------------------------------------------------------------------
 # Class methods.
 #------------------------------------------------------------------------------
+sub module_maker {
+    my ($class, $dest) = @_;
+    $dest = 'blib/lib' if $dest eq 'blib';
+
+    sub {
+        my ($self, $module) = @_;
+
+        # TODO This asserts that we are really building a ::Inline stub.
+        # We might need to be more forgiving on naming here at some point:
+        $module =~ m!/Inline\w*\.pm$!
+            or return;
+
+        my $path = "$dest/$module";
+        if (not -e $path) {
+            $module =~ s/\.pm$//;
+            $module =~ s!/!::!g;
+            my $path = $class->write_proxy_module($dest, $module);
+            warn "Created stub module '$path' (Inline::Module $VERSION)\n";
+        }
+
+        open my $fh, '<', $path or die "Can't open '$path' for input:\n$!";
+        return $fh;
+    }
+}
+
 sub handle_distdir {
     my ($class) = @_;
     my ($distdir, @args) = @ARGV;

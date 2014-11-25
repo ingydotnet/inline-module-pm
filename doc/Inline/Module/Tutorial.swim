@@ -81,10 +81,9 @@ right magics.
 Next you'll need to actually generate the stub module. You only need to do
 this once. Run this command:
 
-  perl-inline-module generate Acme::Math::XS::Inline
+  perl -MInline::Module=blib Acme::Math::XS -e1
 
-You'll get a `lib/Acme/Math/XS/Inline.pm` that looks like this:
-
+You'll get a `blib/lib/Acme/Math/XS/Inline.pm` that looks like this:
 
   use strict; use warnings;
   package Acme::Math::XS::Inline;
@@ -108,6 +107,10 @@ That stub will look like this:
 And everything is fine. We are just using Dynaloader, the age old loader of
 extension libraries. As long the shared library stuff gets built into the
 `blib` directory at user build time (and it does!) we are good to go.
+
+== Automatic Stub Generation
+
+# TODO
 
 == Testing
 
