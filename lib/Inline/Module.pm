@@ -79,11 +79,13 @@ sub importer {
     my ($class, $inline_module) = @_;
     return sub {
         require File::Path;
-        File::Path::mkpath('./blib') unless -d './blib';
+        my $inline_build_path = './blib/Inline';
+        File::Path::mkpath($inline_build_path)
+            unless -d $inline_build_path;
         require Inline;
         Inline->import(
             Config =>
-            directory => './blib',
+            directory => $inline_build_path,
             using => 'Inline::C::Parser::RegExp',
             name => $inline_module,
         );
@@ -186,7 +188,6 @@ sub handle_makestub {
 
 sub handle_autostub {
     my ($class, @args) = @_;
-    delete $ENV{PERL5OPT};
     croak "The 'autostub' directive used but no './lib' dir present"
         unless -d 'lib';
     require lib;
@@ -209,6 +210,7 @@ sub handle_autostub {
 
     push @INC, sub {
         my ($self, $module) = @_;
+        delete $ENV{PERL5OPT};
 
         # TODO This asserts that we are really building a ::Inline stub.
         # We might need to be more forgiving on naming here at some point:
