@@ -16,6 +16,13 @@ sub new {
     return bless {@_}, $class;
 }
 
+sub DEBUG {
+    return unless $ENV{PERL_INLINE_MODULE_DEBUG};
+    print ">>>>>> ";
+    printf @_;
+    print "\n";
+}
+
 #------------------------------------------------------------------------------
 # This import serves multiple roles:
 # - -MInline::Module=autostub
@@ -25,6 +32,7 @@ sub new {
 #------------------------------------------------------------------------------
 sub import {
     my $class = shift;
+    DEBUG "Inline::Module::import(@_)";
 
     my ($inline_module, $program) = caller;
 
@@ -89,6 +97,7 @@ sub importer {
             name => $inline_module,
         );
         my $class = shift;
+        DEBUG "Inline::Module proxy to Inline::%s", @_;
         Inline->import_heavy(@_);
     };
 }
