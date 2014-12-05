@@ -8,7 +8,7 @@ PATH="$BASHLIB:$PATH"
 source bash+ :std
 
 TMP=$PWD/tmp
-BEGIN_PWD=$PWD
+TEST_HOME=$PWD
 
 rm -fr $TMP
 mkdir $TMP
@@ -17,7 +17,7 @@ export PERL5LIB="$PWD/lib:$PERL5LIB"
 cd $TMP
 
 teardown() {
-  cd $BEGIN_PWD
+  cd $TEST_HOME
   rm -fr $TMP
   return 0
 }

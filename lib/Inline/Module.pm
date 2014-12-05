@@ -18,7 +18,7 @@ sub new {
 
 #------------------------------------------------------------------------------
 # This import serves multiple roles:
-# - bin/perl-inline-module
+# - -MInline::Module=autostub
 # - ::Inline module's proxy to Inline.pm
 # - Makefile.PL postamble
 # - Makefile rule support
@@ -27,52 +27,33 @@ sub import {
     my $class = shift;
 
     my ($inline_module, $program) = caller;
-    if (@_ == 1 and $_[0] =~ /^b?lib$/) {
-        if (-d 'lib') {
-            unshift @INC, 'lib';
-            push @INC, $class->module_maker(@_);
-        }
-        return;
-    }
-    elsif ($program eq 'Makefile.PL') {
+
+    if ($program eq 'Makefile.PL') {
         no warnings 'once';
         *MY::postamble = \&postamble;
         return;
     }
 
-    if (@_ == 1) {
-        my ($cmd) = @_;
-        if ($cmd =~ /^(distdir|fixblib)$/) {
-            my $method = "handle_$cmd";
-            $class->$method();
-        }
-        else {
-            die "Unknown argument '$cmd'"
-        }
+    return unless @_;
+    my $cmd = shift;
+
+    return $class->handle_makestub(@_)
+        if $cmd eq 'makestub';
+    return $class->handle_autostub(@_)
+        if $cmd eq 'autostub';
+    return $class->handle_distdir(@_)
+        if $cmd eq 'distdir';
+    return $class->handle_fixblib(@_)
+        if $cmd eq 'fixblib';
+
+    if ($cmd =~ /^v[0-9]$/) {
+        $class->check_api_version($inline_module, $cmd => @_);
+        no strict 'refs';
+        *{"${inline_module}::import"} = $class->importer($inline_module);
         return;
     }
 
-    return unless @_;
-
-    # XXX 'exit' is used to get a cleaner error msg.
-    # Try to redo this without 'exit'.
-    $class->check_api_version($inline_module, @_)
-        or exit 1;
-
-    my $importer = sub {
-        require File::Path;
-        File::Path::mkpath('./blib') unless -d './blib';
-        # TODO try to not use eval here:
-        eval "use Inline Config => " .
-            "directory => './blib', " .
-            "using => 'Inline::C::Parser::RegExp', " .
-            "name => '$inline_module'";
-
-        my $class = shift;
-        Inline->import_heavy(@_);
-    };
-    no strict 'refs';
-    *{"${inline_module}::import"} = $importer;
+    die "Unknown argument '$cmd'"
 }
 
 sub check_api_version {
@@ -85,12 +66,30 @@ You have Inline::Module version '$VERSION' installed.
 
 Make sure you have the latest version of Inline::Module installed, then run:
 
-    perl-inline-module generate $inline_module
+    perl -MInline::Module=makestub,$inline_module
 
 ...
-        return;
+        # XXX 'exit' is used to get a cleaner error msg.
+        # Try to redo this without 'exit'.
+        exit 1;
     }
-    return 1;
+}
+
+sub importer {
+    my ($class, $inline_module) = @_;
+    return sub {
+        require File::Path;
+        File::Path::mkpath('./blib') unless -d './blib';
+        require Inline;
+        Inline->import(
+            Config =>
+            directory => './blib',
+            using => 'Inline::C::Parser::RegExp',
+            name => $inline_module,
+        );
+        my $class = shift;
+        Inline->import_heavy(@_);
+    };
 }
 
 #------------------------------------------------------------------------------
@@ -155,11 +154,59 @@ sub included_modules {
 #------------------------------------------------------------------------------
 # Class methods.
 #------------------------------------------------------------------------------
-sub module_maker {
-    my ($class, $dest) = @_;
-    $dest = 'blib/lib' if $dest eq 'blib';
+sub handle_makestub {
+    my ($class, @args) = @_;
 
-    sub {
+    my $dest;
+    my @modules;
+    for my $arg (@args) {
+        if ($arg eq 'blib') {
+            $dest = 'blib/lib';
+        }
+        elsif ($arg =~ m!/!) {
+            $dest = $arg;
+        }
+        elsif ($arg =~ /::/) {
+            push @modules, $arg;
+        }
+        else {
+            croak "Unknown 'makestub' argument: '$arg'";
+        }
+    }
+    $dest ||= 'lib';
+
+
+    for my $module (@modules) {
+        my $path = $class->write_proxy_module($dest, $module);
+        print "Created stub module '$path' (Inline::Module $VERSION)\n";
+    }
+
+    exit 0;
+}
+
+sub handle_autostub {
+    my ($class, @args) = @_;
+    croak "The 'autostub' directive used but no './lib' dir present"
+        unless -d 'lib';
+    require lib;
+    lib->import('lib');
+
+    my $dest;
+    my @modules;
+    for my $arg (@args) {
+        if ($arg eq 'blib') {
+            $dest = 'blib/lib';
+        }
+        elsif ($arg =~ m!/!) {
+            $dest = $arg;
+        }
+        else {
+            croak "Unknown 'autostub' argument: '$arg'";
+        }
+    }
+    $dest ||= 'lib';
+
+    push @INC, sub {
         my ($self, $module) = @_;
 
         # TODO This asserts that we are really building a ::Inline stub.
@@ -169,10 +216,10 @@ sub module_maker {
 
         my $path = "$dest/$module";
         if (not -e $path) {
-            $module =~ s/\.pm$//;
+            $module =~ s!\.pm$!!;
             $module =~ s!/!::!g;
             my $path = $class->write_proxy_module($dest, $module);
-            warn "Created stub module '$path' (Inline::Module $VERSION)\n";
+            print "Created stub module '$path' (Inline::Module $VERSION)\n";
         }
 
         open my $fh, '<', $path or die "Can't open '$path' for input:\n$!";
@@ -255,7 +302,6 @@ sub write_proxy_module {
 
 use strict; use warnings;
 package $module;
-use base 'Inline';
 use Inline::Module 'v1' => '$VERSION';
 
 1;

@@ -34,7 +34,7 @@ These are the steps that a user goes through to make a Inline module and get it 
 
 3) Author generates `lib/Foo/Bar/Inline.pm` with this tool:
 
-    perl-inline-module generate Foo::Bar::Inline
+    perl -MInline::Module=makestub,Foo::Bar::Inline
 
 4) Author codes and tests with one of the following:
   - `perl Makefile.PL; make test`

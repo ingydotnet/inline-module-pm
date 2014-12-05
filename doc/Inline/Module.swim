@@ -73,25 +73,18 @@ Arguments are key/value pairs.
 
 During development, [Inline::Module] needs to generate /stub/ modules. For the
 case in the synopsis, it would need to generate `Acme::Math::XS::Inline`.
-Depending on your development / testing style, it can either go into `lib/` or
-`blib/` (even if `blib/` doesn't exist yet). There a few similar but different
-ways to do this:
+There a few similar but different ways to do this:
 
-  PERL5OPT='-MInline::Module=blib' prove -blv t/
+  perl -MInline::Module=makestub,Acme::Math::XS::Inline
 
 or:
 
-  export PERL5OPT='-MInline::Module=lib'
+  export PERL5OPT='-MInline::Module=autostub'
   prove -lv t/
 
-
 or:
 
-  perl -MInline::Module=blib -MAcme::Math::XS -e1
-
-or (temporarily) in your code:
-
-  use Inline::Module 'blib';
+  perl Makefile.PL
 
 = TPF Grant
 
