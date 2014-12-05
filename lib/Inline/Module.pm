@@ -53,7 +53,7 @@ sub import {
         return;
     }
 
-    die "Unknown argument '$cmd'"
+    die "Unknown Inline::Module::import argument '$cmd'"
 }
 
 sub check_api_version {
