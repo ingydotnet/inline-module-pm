@@ -2,14 +2,14 @@ use strict; use warnings;
 package Inline::Module;
 our $VERSION = '0.17';
 
-use Config;
-use File::Path;
-use File::Copy;
-use File::Find;
-use Inline();
-use Carp;
+use Config();
+use File::Path();
+use File::Find();
+use Carp 'croak';
 
 use XXX;
+
+my $inline_build_path = './blib/Inline';
 
 sub new {
     my $class = shift;
@@ -79,7 +79,6 @@ sub importer {
     my ($class, $inline_module) = @_;
     return sub {
         require File::Path;
-        my $inline_build_path = './blib/Inline';
         File::Path::mkpath($inline_build_path)
             unless -d $inline_build_path;
         require Inline;
@@ -256,20 +255,20 @@ sub handle_fixblib {
     my $ext = $Config::Config{dlext};
     -d 'blib'
         or die "Inline::Module::fixblib expected to find 'blib' directory";
-    find({
+    File::Find::find({
         wanted => sub {
             -f or return;
-            m!^blib/(config-|\.lock$)! and unlink, return;
-            if (m!^(blib/lib/auto/.*)\.$ext$!) {
-                unlink "$1.inl", "$1.bs";
-                # XXX this deletes:
-                # -lib/auto/Acme/Math/XS/.exists
-                File::Path::rmtree 'blib/arch/auto';
-                File::Copy::move 'blib/lib/auto', 'blib/arch/auto';
+            if (m!^($inline_build_path/lib/auto/.*)\.$ext$!) {
+                my $blib_ext = $_;
+                $blib_ext =~ s!^$inline_build_path/lib!blib/arch! or die;
+                my $blib_ext_dir = $blib_ext;
+                $blib_ext_dir =~ s!(.*)/.*!$1! or die;
+                File::Path::mkpath $blib_ext_dir;
+                link $_, $blib_ext;
             }
         },
         no_chdir => 1,
-    }, 'blib');
+    }, $inline_build_path);
 }
 
 sub write_included_module {
