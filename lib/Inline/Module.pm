@@ -186,6 +186,7 @@ sub handle_makestub {
 
 sub handle_autostub {
     my ($class, @args) = @_;
+    delete $ENV{PERL5OPT};
     croak "The 'autostub' directive used but no './lib' dir present"
         unless -d 'lib';
     require lib;
