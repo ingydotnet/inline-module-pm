@@ -1,12 +1,24 @@
 == To Do Next
 
+- Update MANIFEST file with inc/ stuff
+
 - Add new plugin sections to the tutorial
 
 - Refactor Dist-Zilla-Plugin-InlineModule to use postamble
   - and Alt-Acme-Math-XS-DistZilla
   - Look at ZillaDist too
 
+- Write tests for dist operations
+
+- Find out why `make test` invokes Inline::Module in a distdir
+  - Only `make` should do that
+
+- Disable autostub when inc/ exists (ie during distdir time)
+
 == Soon
+
+- Check VERSION in XS
+  - Add VERSION stuff into generated XS
 
 - Add tests
   + Bash test setup
