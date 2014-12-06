@@ -34,7 +34,7 @@ sub import {
     my $class = shift;
     DEBUG "Inline::Module::import(@_)";
 
-    my ($inline_module, $program) = caller;
+    my ($stub_module, $program) = caller;
 
     if ($program eq 'Makefile.PL') {
         no warnings 'once';
@@ -55,9 +55,9 @@ sub import {
         if $cmd eq 'fixblib';
 
     if ($cmd =~ /^v[0-9]$/) {
-        $class->check_api_version($inline_module, $cmd => @_);
+        $class->check_api_version($stub_module, $cmd => @_);
         no strict 'refs';
-        *{"${inline_module}::import"} = $class->importer($inline_module);
+        *{"${stub_module}::import"} = $class->importer($stub_module);
         return;
     }
 
@@ -65,16 +65,16 @@ sub import {
 }
 
 sub check_api_version {
-    my ($class, $inline_module, $api_version, $inline_module_version) = @_;
+    my ($class, $stub_module, $api_version, $inline_module_version) = @_;
     if ($api_version ne 'v1' or $inline_module_version ne $VERSION) {
         warn <<"...";
-It seems that '$inline_module' is out of date.
+It seems that '$stub_module' is out of date.
 It is using Inline::Module version '$inline_module_version'.
 You have Inline::Module version '$VERSION' installed.
 
 Make sure you have the latest version of Inline::Module installed, then run:
 
-    perl -MInline::Module=makestub,$inline_module
+    perl -MInline::Module=makestub,$stub_module
 
 ...
         # XXX 'exit' is used to get a cleaner error msg.
@@ -84,7 +84,7 @@ Make sure you have the latest version of Inline::Module installed, then run:
 }
 
 sub importer {
-    my ($class, $inline_module) = @_;
+    my ($class, $stub_module) = @_;
     return sub {
         require File::Path;
         File::Path::mkpath($inline_build_path)
@@ -94,7 +94,7 @@ sub importer {
             Config =>
             directory => $inline_build_path,
             using => 'Inline::C::Parser::RegExp',
-            name => $inline_module,
+            name => $stub_module,
         );
         my $class = shift;
         DEBUG "Inline::Module proxy to Inline::%s", @_;
@@ -187,7 +187,8 @@ sub handle_makestub {
 
 
     for my $module (@modules) {
-        my $path = $class->write_proxy_module($dest, $module);
+        my $code = $class->proxy_module($module);
+        my $path = $class->write_module($dest, $module, $code);
         print "Created stub module '$path' (Inline::Module $VERSION)\n";
     }
 
@@ -196,40 +197,45 @@ sub handle_makestub {
 
 sub handle_autostub {
     my ($class, @args) = @_;
-    croak "The 'autostub' directive used but no './lib' dir present"
-        unless -d 'lib';
+
     require lib;
     lib->import('lib');
 
-    my $dest;
-    my @modules;
+    my ($dest, %autostub_modules);
     for my $arg (@args) {
-        if ($arg eq 'blib') {
-            $dest = 'blib/lib';
+        if ($arg =~ m!::!) {
+            $autostub_modules{$arg} = 1;
         }
-        elsif ($arg =~ m!/!) {
-            $dest = $arg;
+        elsif ($arg =~ m!(^(b?lib$|mem)$|/)!) {
+            croak "Invalid arg '$arg'. Dest path already set to '$dest'"
+                if $dest;
+            $dest = $arg eq 'blib' ? 'blib/lib' : $arg;
         }
         else {
             croak "Unknown 'autostub' argument: '$arg'";
         }
     }
-    $dest ||= 'lib';
+    $dest ||= 'mem';
 
     push @INC, sub {
-        my ($self, $module) = @_;
+        my ($self, $module_path) = @_;
         delete $ENV{PERL5OPT};
 
-        # TODO This asserts that we are really building a ::Inline stub.
-        # We might need to be more forgiving on naming here at some point:
-        $module =~ m!/Inline\w*\.pm$!
-            or return;
+        my $module = $module_path;
+        $module =~ s!\.pm$!!;
+        $module =~ s!/!::!g;
+        $autostub_modules{$module} or return;
 
-        my $path = "$dest/$module";
+        if ($dest eq 'mem') {
+            my $code = $class->proxy_module($module);
+            open my $fh, '<', \$code;
+            return $fh;
+        }
+
+        my $path = "$dest/$module_path";
         if (not -e $path) {
-            $module =~ s!\.pm$!!;
-            $module =~ s!/!::!g;
-            my $path = $class->write_proxy_module($dest, $module);
+            my $code = $class->proxy_module($module);
+            $class->write_module($dest, $module, $code);
             print "Created stub module '$path' (Inline::Module $VERSION)\n";
         }
 
@@ -251,8 +257,10 @@ sub handle_distdir {
     }
 
     for my $module (@inlined_modules) {
-        $class->write_dyna_module("$distdir/lib", $module);
-        $class->write_proxy_module("$distdir/inc", $module);
+        my $code = $class->dyna_module($module);
+        $class->write_module("$distdir/lib", $module, $code);
+        $code = $class->proxy_module($module);
+        $class->write_module("$distdir/inc", $module, $code);
     }
     for my $module (@included_modules) {
         $class->write_included_module("$distdir/inc", $module);
@@ -299,10 +307,10 @@ sub read_local_module {
     return $code;
 }
 
-sub write_proxy_module {
-    my ($class, $dest, $module) = @_;
+sub proxy_module {
+    my ($class, $module) = @_;
 
-    my $code = <<"...";
+    return <<"...";
 # DO NOT EDIT
 #
 # GENERATED BY: Inline::Module $Inline::Module::VERSION
@@ -317,13 +325,11 @@ use Inline::Module 'v1' => '$VERSION';
 
 1;
 ...
-
-    $class->write_module($dest, $module, $code);
 }
 
-sub write_dyna_module {
-    my ($class, $dest, $module) = @_;
-    my $code = <<"...";
+sub dyna_module {
+    my ($class, $module) = @_;
+    return <<"...";
 # DO NOT EDIT
 #
 # GENERATED BY: Inline::Module $Inline::Module::VERSION
@@ -339,12 +345,10 @@ bootstrap $module;
 # XXX - think about this later:
 # our \$VERSION = '0.0.5';
 # bootstrap $module \$VERSION;
-
-    $class->write_module($dest, $module, $code);
 }
 
 sub write_module {
-    my ($class, $dest, $module, $text) = @_;
+    my ($class, $dest, $module, $code) = @_;
 
     my $filepath = $module;
     $filepath =~ s!::!/!g;
@@ -356,7 +360,7 @@ sub write_module {
     unlink $filepath;
     open OUT, '>', $filepath
         or die "Can't open '$filepath' for output:\n$!";
-    print OUT $text;
+    print OUT $code;
     close OUT;
 
     return $filepath;

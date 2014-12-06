@@ -1,37 +1,47 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 source "`dirname $0`/setup"
 use Test::More
 BAIL_ON_FAIL
 
-# lib must exist (Sanity check)
-mkdir lib
+{
+  perl -MInline::Module=makestub,Foo::Bar
+  ok "`[ -f lib/Foo/Bar.pm ]`" "Stub file was generated into lib"
+  rm -fr lib
+}
 
-# Generate a stub
-perl -MInline::Module=makestub,Foo::Inline
-ok "`[ -f lib/Foo/Inline.pm ]`" "The stub file exists in lib"
-rm -fr lib/Foo
+{
+  (
+    export PERL5OPT=-MInline::Module=autostub,Foo::Bar
+    perl -e 'use Foo::Bar'
+  )
+  pass "Stub was auto-generated as IO::String object"
+  # ok "`[ ! -e lib ] && [ ! -e blib ]`" "Neither lib nor blib exist"
+}
 
-# Auto-generate a stub
-(
-  export PERL5OPT=-MInline::Module=autostub
-  perl -e 'use Foo::Inline'
-)
-ok "`[ -f lib/Foo/Inline.pm ]`" "The stub file exists in lib"
-rm -fr lib/Foo
+{
+  (
+    export PERL5OPT=-MInline::Module=autostub,lib,Foo::Bar
+    perl -e 'use Foo::Bar'
+  )
+  ok "`[ -f lib/Foo/Bar.pm ]`" "Stub file auto-generated into lib"
+  rm -fr lib
+}
 
-# Generate into blib
-perl -MInline::Module=makestub,Foo::Inline,blib
-ok "`[ -f blib/lib/Foo/Inline.pm ]`" "The stub file exists in blib"
-rm -fr blib
+{
+  perl -MInline::Module=makestub,Foo::Bar,blib
+  ok "`[ -f blib/lib/Foo/Bar.pm ]`" "Stub file generated into blib"
+  rm -fr blib
+}
 
-# Auto-generate into blib
-(
-  export PERL5OPT=-MInline::Module=autostub,blib
-  perl -e 'use Foo::Inline'
-)
-ok "`[ -f blib/lib/Foo/Inline.pm ]`" "The stub file exists in blib"
-rm -fr blib
+{
+  (
+    export PERL5OPT=-MInline::Module=autostub,Foo::Bar,blib
+    perl -e 'use Foo::Bar'
+  )
+  ok "`[ -f blib/lib/Foo/Bar.pm ]`" "Stub file auto-generated into blib"
+  rm -fr blib
+}
 
 done_testing
 teardown
