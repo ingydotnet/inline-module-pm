@@ -53,9 +53,9 @@ Arguments are key/value pairs.
   Required. This is the module that contains inline `C` or `C++` code. It can
   be an array ref of multiple modules.
 
-- `inline`
+- `stub`
 
-    inline => 'My::Module::Inline',
+    stub => 'My::Module::Inline',
 
   Optional. This is the name of the Inline::Module generated stub module. It's
   value defaults to the `module` argument with '::Inline' appended. It can be

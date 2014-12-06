@@ -117,14 +117,14 @@ sub postamble {
     $self->default_args($inline, $makemaker);
 
     my $code_modules = $self->{module};
-    my $inlined_modules = $self->{inline};
+    my $stub_modules = $self->{stub};
     my @included_modules = $self->included_modules;
 
     my $section = <<"...";
 distdir : distdir_inline
 
 distdir_inline : create_distdir
-\t\$(NOECHO) \$(ABSPERLRUN) -MInline::Module=distdir -e 1 -- \$(DISTVNAME) @$inlined_modules -- @included_modules
+\t\$(NOECHO) \$(ABSPERLRUN) -MInline::Module=distdir -e 1 -- \$(DISTVNAME) @$stub_modules -- @included_modules
 
 pure_all ::
 ...
@@ -142,8 +142,8 @@ sub default_args {
     my ($self, $args, $makemaker) = @_;
     $args->{module} = $makemaker->{NAME} unless $args->{module};
     $args->{module} = [ $args->{module} ] unless ref $args->{module};
-    $args->{inline} ||= [ map "${_}::Inline", @{$args->{module}} ];
-    $args->{inline} = [ $args->{inline} ] unless ref $args->{inline};
+    $args->{stub} ||= [ map "${_}::Inline", @{$args->{module}} ];
+    $args->{stub} = [ $args->{stub} ] unless ref $args->{stub};
     $args->{ilsm} ||= 'Inline::C';
     $args->{ilsm} = [ $args->{ilsm} ] unless ref $args->{ilsm};
     %$self = %$args;

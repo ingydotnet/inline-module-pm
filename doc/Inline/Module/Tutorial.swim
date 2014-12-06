@@ -34,7 +34,7 @@ now we'll just show `Makefile.PL` way:
     postamble => {
       inline => {
         module => 'Acme::Math::XS',
-        inline => 'Acme::Math::XS::Inline',
+        stub => 'Acme::Math::XS::Inline',
         ilsm => 'Inline::C',
       },
     },
