@@ -1,4 +1,9 @@
 ---
+version: 0.18
+date:    Sun Dec  7 00:23:01 PST 2014
+changes:
+- Auto-Stubbing
+---
 version: 0.17
 date:    Mon Nov 24 10:27:25 PST 2014
 changes:
