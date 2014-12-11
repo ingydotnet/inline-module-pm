@@ -95,8 +95,7 @@ sub importer {
         Inline->import(
             Config =>
             directory => $inline_build_path,
-            ($lang eq 'C') ? (using => 'Inline::C::Parser::RecDescent') :
-            ($lang eq 'CPP') ? (using => 'Inline::CPP::Parser::RecDescent') : (),
+            ($lang eq 'C') ? (using => 'Inline::C::Parser::RecDescent') : ();
             name => $stub_module,
             CLEAN_AFTER_BUILD => 0,
         );
