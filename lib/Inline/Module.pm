@@ -95,6 +95,7 @@ sub importer {
             directory => $inline_build_path,
             using => 'Inline::C::Parser::RegExp',
             name => $stub_module,
+            CLEAN_AFTER_BUILD => 0,
         );
         my $class = shift;
         DEBUG "Inline::Module proxy to Inline::%s", @_;
