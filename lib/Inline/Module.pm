@@ -86,6 +86,8 @@ Make sure you have the latest version of Inline::Module installed, then run:
 sub importer {
     my ($class, $stub_module) = @_;
     return sub {
+        my ($class, $lang) = @_;
+        return unless defined $lang;
         require File::Path;
         File::Path::mkpath($inline_build_path)
             unless -d $inline_build_path;
