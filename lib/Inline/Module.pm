@@ -36,7 +36,7 @@ sub import {
 
     my ($stub_module, $program) = caller;
 
-    if ($program eq 'Makefile.PL') {
+    if ($program eq 'Makefile.PL' && not -e 'INLINE.h') {
         no warnings 'once';
         *MY::postamble = \&postamble;
         return;
