@@ -155,14 +155,23 @@ sub default_args {
 
 sub included_modules {
     my ($self) = @_;
-
-    return (
+    my $ilsm = $self->{ilsm};
+    my @include = (
         'Inline',
         'Inline::denter',
-        @{$self->{ilsm}},
-        'Inline::C::Parser::RegExp',
         'Inline::Module',
+        @$ilsm,
     );
+    if (grep /:C$/, @$ilsm) {
+        push @include,
+            'Inline::C::Parser::RegExp';
+    }
+    if (grep /:CPP$/, @$ilsm) {
+        push @include,
+            'Inline::CPP::Parser::RecDescent',
+            'Parse::RecDescent';
+    }
+    return @include;
 }
 
 #------------------------------------------------------------------------------
