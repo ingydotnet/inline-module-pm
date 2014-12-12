@@ -7,7 +7,7 @@ use File::Path();
 use File::Find();
 use Carp 'croak';
 
-    # use XXX;
+# use XXX;
 
 my $inline_build_path = './blib/Inline';
 
@@ -210,6 +210,11 @@ sub handle_makestub {
 
 sub handle_autostub {
     my ($class, @args) = @_;
+
+    # Don't mess with Perl tools, while using PERL5OPT and autostub
+    return unless
+        $0 eq '-e' or
+        defined $ENV{_} and $ENV{_} =~ m!/prove[^/]*$!;
 
     require lib;
     lib->import('lib');
