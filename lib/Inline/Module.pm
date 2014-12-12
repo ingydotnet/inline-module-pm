@@ -7,7 +7,7 @@ use File::Path();
 use File::Find();
 use Carp 'croak';
 
-use XXX;
+    use XXX;
 
 my $inline_build_path = './blib/Inline';
 
@@ -197,7 +197,6 @@ sub handle_makestub {
     }
     $dest ||= 'lib';
 
-
     for my $module (@modules) {
         my $code = $class->proxy_module($module);
         my $path = $class->write_module($dest, $module, $code);
@@ -268,15 +267,23 @@ sub handle_distdir {
         push @included_modules, $_;
     }
 
+    my @manifest;
     for my $module (@inlined_modules) {
         my $code = $class->dyna_module($module);
         $class->write_module("$distdir/lib", $module, $code);
         $code = $class->proxy_module($module);
         $class->write_module("$distdir/inc", $module, $code);
+        $module =~ s!::!/!g;
+        push @manifest, "lib/$module.pm", "inc/$module.pm";
     }
     for my $module (@included_modules) {
-        $class->write_included_module("$distdir/inc", $module);
+        my $code = $class->read_local_module($module);
+        $class->write_module("$distdir/inc", $module, $code);
+        $module =~ s!::!/!g;
+        push @manifest, "inc/$module.pm";
     }
+
+    $class->add_to_manifest($distdir, @manifest);
 }
 
 sub handle_fixblib {
@@ -298,12 +305,6 @@ sub handle_fixblib {
         },
         no_chdir => 1,
     }, $inline_build_path);
-}
-
-sub write_included_module {
-    my ($class, $dest, $module) = @_;
-    my $code = $class->read_local_module($module);
-    $class->write_module($dest, $module, $code);
 }
 
 sub read_local_module {
@@ -376,6 +377,17 @@ sub write_module {
     close OUT;
 
     return $filepath;
+}
+
+sub add_to_manifest {
+    my ($class, $distdir, @files) = @_;
+    my $manifest = "$distdir/MANIFEST";
+    open my $out, '>>', $manifest
+        or die "Can't open '$manifest' for append:\n$!";
+    for my $file (@files) {
+        print $out "$file\n";
+    }
+    close $out;
 }
 
 1;
