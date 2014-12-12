@@ -1,7 +1,5 @@
 == To Do Next
 
-- Update MANIFEST file with inc/ stuff
-
 - Add new plugin sections to the tutorial
 
 - Refactor Dist-Zilla-Plugin-InlineModule to use postamble
@@ -50,3 +48,5 @@
     > make
     Can't opendir(blib/lib/auto/Alt): No such file or directory
     at inc/Inline/Module.pm line 227.
++ Update MANIFEST file with inc/ stuff
+
