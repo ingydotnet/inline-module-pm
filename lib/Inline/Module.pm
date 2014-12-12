@@ -51,9 +51,9 @@ sub import {
         if $cmd eq 'makestub';
     return $class->handle_autostub(@_)
         if $cmd eq 'autostub';
-    return $class->handle_distdir(@_)
+    return $class->handle_distdir(@ARGV)
         if $cmd eq 'distdir';
-    return $class->handle_fixblib(@_)
+    return $class->handle_fixblib()
         if $cmd eq 'fixblib';
 
     if ($cmd =~ /^v[0-9]$/) {
@@ -267,8 +267,7 @@ sub handle_autostub {
 }
 
 sub handle_distdir {
-    my ($class) = @_;
-    my ($distdir, @args) = @ARGV;
+    my ($class, $distdir, @args) = @_;
     my (@inlined_modules, @included_modules);
 
     while (@args and ($_ = shift(@args)) ne '--') {

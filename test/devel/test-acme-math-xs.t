@@ -28,5 +28,13 @@ cd acme-math-xs-pm
   ok "`[ -d blib ]`" "The 'blib' dir exists after 'make'"
 }
 
+{
+  make distdir
+  dd=( Alt-Acme-Math-XS-EUMM-* )
+  ok "`[ -e "$dd/MANIFEST" ]`" "$dd/MANIFEST exists"
+  ok "`[ -e "$dd/inc/Acme/Math/XS/Inline.pm" ]`" \
+    "$dd/inc/Acme/Math/XS/Inline.pm exists"
+}
+
 done_testing;
 teardown
