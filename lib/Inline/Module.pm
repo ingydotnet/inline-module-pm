@@ -7,7 +7,7 @@ use File::Path();
 use File::Find();
 use Carp 'croak';
 
-    use XXX;
+    # use XXX;
 
 my $inline_build_path = './blib/Inline';
 
@@ -16,11 +16,13 @@ sub new {
     return bless {@_}, $class;
 }
 
+use constant DEBUG_ON => $ENV{PERL_INLINE_MODULE_DEBUG} ? 1 : 0;
 sub DEBUG {
-    return unless $ENV{PERL_INLINE_MODULE_DEBUG};
-    print ">>>>>> ";
-    printf @_;
-    print "\n";
+    if (DEBUG_ON) {
+        print ">>>>>> ";
+        printf @_;
+        print "\n";
+    }
 }
 
 #------------------------------------------------------------------------------
@@ -32,7 +34,7 @@ sub DEBUG {
 #------------------------------------------------------------------------------
 sub import {
     my $class = shift;
-    DEBUG "Inline::Module::import(@_)";
+    DEBUG_ON && DEBUG "Inline::Module::import(@_)";
 
     my ($stub_module, $program) = caller;
 
@@ -100,7 +102,7 @@ sub importer {
             CLEAN_AFTER_BUILD => 0,
         );
         shift(@_);
-        DEBUG "Inline::Module proxy to Inline::%s", @_;
+        DEBUG_ON && DEBUG "Inline::Module proxy to Inline::%s", @_;
         Inline->import_heavy(@_);
     };
 }
