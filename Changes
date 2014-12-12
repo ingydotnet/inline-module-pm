@@ -1,4 +1,10 @@
 ---
+version: 0.19
+date:    Thu Dec 11 18:47:18 PST 2014
+changes:
+- Update MANIFEST
+- Support CPP correctly
+---
 version: 0.18
 date:    Sun Dec  7 00:23:01 PST 2014
 changes:
