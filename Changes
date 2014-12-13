@@ -1,4 +1,9 @@
 ---
+version: 0.21
+date:    Sat Dec 13 11:29:29 EST 2014
+changes:
+- Make handle_distdir return manifest added files
+---
 version: 0.20
 date:    Fri Dec 12 19:17:54 EST 2014
 changes:
