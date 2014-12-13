@@ -1,4 +1,9 @@
 ---
+version: 0.20
+date:    Fri Dec 12 19:17:54 EST 2014
+changes:
+- Refactor handle_distdir to support dzil plugin and other external calls
+---
 version: 0.19
 date:    Thu Dec 11 18:47:18 PST 2014
 changes:
