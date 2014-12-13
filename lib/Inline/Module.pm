@@ -277,7 +277,7 @@ sub handle_distdir {
         push @included_modules, $_;
     }
 
-    my @manifest;
+    my @manifest; # files created under distdir
     for my $module (@inlined_modules) {
         my $code = $class->dyna_module($module);
         $class->write_module("$distdir/lib", $module, $code);
@@ -294,6 +294,8 @@ sub handle_distdir {
     }
 
     $class->add_to_manifest($distdir, @manifest);
+
+    return @manifest; # return a list of the files added
 }
 
 sub handle_fixblib {
