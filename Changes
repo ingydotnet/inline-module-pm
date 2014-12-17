@@ -1,4 +1,9 @@
 ---
+version: 0.23
+date:    Tue Dec 16 23:58:49 EST 2014
+changes:
+- Add Inline::C and Inline::CPP::Config for Inline::CPP-based modules
+---
 version: 0.22
 date:    Tue Dec 16 23:32:17 EST 2014
 changes:

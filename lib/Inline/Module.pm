@@ -1,6 +1,6 @@
 use strict; use warnings;
 package Inline::Module;
-our $VERSION = '0.22';
+our $VERSION = '0.23';
 
 use Config();
 use File::Path();
@@ -169,6 +169,8 @@ sub included_modules {
     }
     if (grep /:CPP$/, @$ilsm) {
         push @include,
+            'Inline::C',
+            'Inline::CPP::Config',
             'Inline::CPP::Parser::RecDescent',
             'Parse::RecDescent';
     }
