@@ -17,13 +17,7 @@ sub new {
 }
 
 use constant DEBUG_ON => $ENV{PERL_INLINE_MODULE_DEBUG} ? 1 : 0;
-sub DEBUG {
-    if (DEBUG_ON) {
-        print ">>>>>> ";
-        printf @_;
-        print "\n";
-    }
-}
+sub DEBUG { if (DEBUG_ON) { print "DEBUG >>> ", sprintf(@_), "\n" }}
 
 #------------------------------------------------------------------------------
 # This import serves multiple roles:
