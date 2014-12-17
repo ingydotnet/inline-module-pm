@@ -157,6 +157,9 @@ sub included_modules {
         'Inline::Module',
         @$ilsm,
     );
+    if (caller eq 'Module::Build::InlineModule') {
+        push @include, 'Module::Build::InlineModule';
+    }
     if (grep /:C$/, @$ilsm) {
         push @include,
             'Inline::C::Parser::RegExp';
@@ -390,12 +393,25 @@ sub write_module {
 sub add_to_manifest {
     my ($class, $distdir, @files) = @_;
     my $manifest = "$distdir/MANIFEST";
+
+    # XXX Module::Build thing.
+    # XXX Call Module::Build->_add_to_manifest
+    my $chmod = 0;
+    if (not -w $manifest) {
+        chmod 0644, $manifest;
+        $chmod = 1;
+    }
+
     open my $out, '>>', $manifest
         or die "Can't open '$manifest' for append:\n$!";
     for my $file (@files) {
         print $out "$file\n";
     }
     close $out;
+
+    if ($chmod) {
+        chmod 0444, $manifest;
+    }
 }
 
 1;
