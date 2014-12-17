@@ -1,4 +1,9 @@
 ---
+version: 0.22
+date:    Tue Dec 16 23:32:17 EST 2014
+changes:
+- Use RegExp (not RecDescent) for Inline::C
+---
 version: 0.21
 date:    Sat Dec 13 11:29:29 EST 2014
 changes:
