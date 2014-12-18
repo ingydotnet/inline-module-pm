@@ -1,4 +1,9 @@
 ---
+version: 0.25
+date:    Wed Dec 17 17:52:05 PST 2014
+changes:
+- Refactor internals to be consistent across plugins
+---
 version: 0.24
 date:    Wed Dec 17 17:52:05 PST 2014
 changes:

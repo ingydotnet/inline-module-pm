@@ -1,6 +1,6 @@
 use strict; use warnings;
 package Inline::Module;
-our $VERSION = '0.24';
+our $VERSION = '0.25';
 our $API_VERSION = 'v2';
 
 use Config();
@@ -8,14 +8,7 @@ use File::Path();
 use File::Find();
 use Carp 'croak';
 
-# use XXX;
-
 my $inline_build_path = './blib/Inline';
-
-sub new {
-    my $class = shift;
-    return bless {@_}, $class;
-}
 
 use constant DEBUG_ON => $ENV{PERL_INLINE_MODULE_DEBUG} ? 1 : 0;
 sub DEBUG { if (DEBUG_ON) { print "DEBUG >>> ", sprintf(@_), "\n" }}
@@ -117,28 +110,28 @@ sub importer {
 }
 
 #------------------------------------------------------------------------------
-# The postamble methods:
+# The postamble method:
 #------------------------------------------------------------------------------
 sub postamble {
     my ($makemaker, %args) = @_;
 
-    my $inline = $args{inline}
+    my $meta = $args{inline}
         or croak "'postamble' section requires 'inline' key in Makefile.PL";
     croak "postamble 'inline' section requires 'module' key in Makefile.PL"
-        unless $inline->{module};
+        unless $meta->{module};
 
-    my $self = $Inline::Module::Self = Inline::Module->new;
-    $self->default_args($inline, $makemaker);
+    my $class = __PACKAGE__;
+    $class->default_meta($meta);
 
-    my $code_modules = $self->{module};
-    my $stub_modules = $self->{stub};
-    my @included_modules = $self->included_modules;
+    my $code_modules = $meta->{module};
+    my $stub_modules = $meta->{stub};
+    my $included_modules = $class->included_modules($meta);
 
     my $section = <<"...";
 distdir : distdir_inline
 
 distdir_inline : create_distdir
-\t\$(NOECHO) \$(ABSPERLRUN) -MInline::Module=distdir -e 1 -- \$(DISTVNAME) @$stub_modules -- @included_modules
+\t\$(NOECHO) \$(ABSPERLRUN) -MInline::Module=distdir -e 1 -- \$(DISTVNAME) @$stub_modules -- @$included_modules
 
 pure_all ::
 ...
@@ -152,45 +145,8 @@ pure_all ::
     return $section;
 }
 
-sub default_args {
-    my ($self, $args, $makemaker) = @_;
-    $args->{module} = $makemaker->{NAME} unless $args->{module};
-    $args->{module} = [ $args->{module} ] unless ref $args->{module};
-    $args->{stub} ||= [ map "${_}::Inline", @{$args->{module}} ];
-    $args->{stub} = [ $args->{stub} ] unless ref $args->{stub};
-    $args->{ilsm} ||= 'Inline::C';
-    $args->{ilsm} = [ $args->{ilsm} ] unless ref $args->{ilsm};
-    %$self = %$args;
-}
-
-sub included_modules {
-    my ($self) = @_;
-    my $ilsm = $self->{ilsm};
-    my @include = (
-        'Inline',
-        'Inline::denter',
-        'Inline::Module',
-        @$ilsm,
-    );
-    if (caller eq 'Module::Build::InlineModule') {
-        push @include, 'Module::Build::InlineModule';
-    }
-    if (grep /:C$/, @$ilsm) {
-        push @include,
-            'Inline::C::Parser::RegExp';
-    }
-    if (grep /:CPP$/, @$ilsm) {
-        push @include,
-            'Inline::C',
-            'Inline::CPP::Config',
-            'Inline::CPP::Parser::RecDescent',
-            'Parse::RecDescent';
-    }
-    return @include;
-}
-
 #------------------------------------------------------------------------------
-# Class methods.
+# The handle methods.
 #------------------------------------------------------------------------------
 sub handle_stub {
     my ($class, $stub_module, $api_version) = @_;
@@ -249,7 +205,7 @@ sub handle_autostub {
     }
 
     push @INC, sub {
-        my ($self, $module) = @_;
+        my ($this, $module) = @_;
         delete $ENV{PERL5OPT};
 
         $module =~ s!\.pm$!!;
@@ -264,34 +220,16 @@ sub handle_autostub {
 
 sub handle_distdir {
     my ($class, $distdir, @args) = @_;
-    my (@inlined_modules, @included_modules);
+    my $stub_modules = [];
+    my $included_modules = [];
 
     while (@args and ($_ = shift(@args)) ne '--') {
-        push @inlined_modules, $_;
+        push @$stub_modules, $_;
     }
     while (@args and ($_ = shift(@args)) ne '--') {
-        push @included_modules, $_;
+        push @$included_modules, $_;
     }
-
-    my @manifest; # files created under distdir
-    for my $module (@inlined_modules) {
-        my $code = $class->dyna_module($module);
-        $class->write_module("$distdir/lib", $module, $code);
-        $code = $class->proxy_module($module);
-        $class->write_module("$distdir/inc", $module, $code);
-        $module =~ s!::!/!g;
-        push @manifest, "lib/$module.pm", "inc/$module.pm";
-    }
-    for my $module (@included_modules) {
-        my $code = $class->read_local_module($module);
-        $class->write_module("$distdir/inc", $module, $code);
-        $module =~ s!::!/!g;
-        push @manifest, "inc/$module.pm";
-    }
-
-    $class->add_to_manifest($distdir, @manifest);
-
-    return @manifest; # return a list of the files added
+    $class->add_to_distdir($distdir, $stub_modules, $included_modules);
 }
 
 sub handle_fixblib {
@@ -313,6 +251,69 @@ sub handle_fixblib {
         },
         no_chdir => 1,
     }, $inline_build_path);
+}
+
+#------------------------------------------------------------------------------
+# Worker methods.
+#------------------------------------------------------------------------------
+sub default_meta {
+    my ($class, $meta) = @_;
+    defined $meta->{module}
+        or die "Meta 'module' not defined";
+    $meta->{module} = [ $meta->{module} ] unless ref $meta->{module};
+    $meta->{stub} ||= [ map "${_}::Inline", @{$meta->{module}} ];
+    $meta->{stub} = [ $meta->{stub} ] unless ref $meta->{stub};
+    $meta->{ilsm} ||= 'Inline::C';
+    $meta->{ilsm} = [ $meta->{ilsm} ] unless ref $meta->{ilsm};
+}
+
+sub included_modules {
+    my ($class, $meta) = @_;
+    my $ilsm = $meta->{ilsm};
+    my $include = [
+        'Inline',
+        'Inline::denter',
+        'Inline::Module',
+        @$ilsm,
+    ];
+    if (caller eq 'Module::Build::InlineModule') {
+        push @$include, 'Module::Build::InlineModule';
+    }
+    if (grep /:C$/, @$ilsm) {
+        push @$include,
+            'Inline::C::Parser::RegExp';
+    }
+    if (grep /:CPP$/, @$ilsm) {
+        push @$include,
+            'Inline::C',
+            'Inline::CPP::Config',
+            'Inline::CPP::Parser::RecDescent',
+            'Parse::RecDescent';
+    }
+    return $include;
+}
+
+sub add_to_distdir {
+    my ($class, $distdir, $stub_modules, $included_modules) = @_;
+    my $manifest = []; # files created under distdir
+    for my $module (@$stub_modules) {
+        my $code = $class->dyna_module($module);
+        $class->write_module("$distdir/lib", $module, $code);
+        $code = $class->proxy_module($module);
+        $class->write_module("$distdir/inc", $module, $code);
+        $module =~ s!::!/!g;
+        push @$manifest, "lib/$module.pm", "inc/$module.pm";
+    }
+    for my $module (@$included_modules) {
+        my $code = $class->read_local_module($module);
+        $class->write_module("$distdir/inc", $module, $code);
+        $module =~ s!::!/!g;
+        push @$manifest, "inc/$module.pm";
+    }
+
+    $class->add_to_manifest($distdir, @$manifest);
+
+    return $manifest; # return a list of the files added
 }
 
 sub read_local_module {
@@ -394,23 +395,13 @@ sub add_to_manifest {
     my ($class, $distdir, @files) = @_;
     my $manifest = "$distdir/MANIFEST";
 
-    # XXX Module::Build thing.
-    # XXX Call Module::Build->_add_to_manifest
-    my $chmod = 0;
-    if (not -w $manifest) {
-        chmod 0644, $manifest;
-        $chmod = 1;
-    }
-
-    open my $out, '>>', $manifest
-        or die "Can't open '$manifest' for append:\n$!";
-    for my $file (@files) {
-        print $out "$file\n";
-    }
-    close $out;
-
-    if ($chmod) {
-        chmod 0444, $manifest;
+    if (-w $manifest) {
+        open my $out, '>>', $manifest
+            or die "Can't open '$manifest' for append:\n$!";
+        for my $file (@files) {
+            print $out "$file\n";
+        }
+        close $out;
     }
 }
 

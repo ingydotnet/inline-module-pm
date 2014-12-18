@@ -284,9 +284,10 @@ this:
 
   name 'Alt-Acme-Math-XS-ModuleInstall';
   ...
-  inline module => 'Acme::Math::XS';
-  inline stub => 'Acme::Math::XS::Inline';
-  inline ilsm => 'Inline::C';
+  inline
+    module => 'Acme::Math::XS',
+    stub => 'Acme::Math::XS::Inline',
+    ilsm => 'Inline::C';
 
   WriteAll;
 

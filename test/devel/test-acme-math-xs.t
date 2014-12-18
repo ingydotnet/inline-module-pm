@@ -23,7 +23,7 @@ cd acme-math-xs-pm
 }
 
 {
-  make distdir
+  make manifest distdir
   dd=( Alt-Acme-Math-XS-EUMM-* )
   ok "`[ -e "$dd/MANIFEST" ]`" "$dd/MANIFEST exists"
   ok "`[ -e "$dd/inc/Acme/Math/XS/Inline.pm" ]`" \
