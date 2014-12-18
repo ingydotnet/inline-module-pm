@@ -8,12 +8,6 @@ git clone $TEST_HOME/../acme-math-xs-pm/.git -b eumm
 cd acme-math-xs-pm
 
 {
-  perl -MInline::Module=autostub,lib,Acme::Math::XS::Inline \
-    -MAcme::Math::XS::Inline -e1
-  ok "`[ -f lib/Acme/Math/XS/Inline.pm ]`" "The stub file exists"
-}
-
-{
   prove -lv t &> out
   pass "Acme::Math::XS passes its tests"
 }

@@ -1,4 +1,9 @@
 ---
+version: 0.24
+date:    Wed Dec 17 17:52:05 PST 2014
+changes:
+- Change to API version v2
+---
 version: 0.23
 date:    Tue Dec 16 23:58:49 EST 2014
 changes:

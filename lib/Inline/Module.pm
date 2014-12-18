@@ -1,6 +1,7 @@
 use strict; use warnings;
 package Inline::Module;
-our $VERSION = '0.23';
+our $VERSION = '0.24';
+our $API_VERSION = 'v2';
 
 use Config();
 use File::Path();
@@ -41,32 +42,27 @@ sub import {
     return unless @_;
     my $cmd = shift;
 
-    return $class->handle_makestub(@_)
-        if $cmd eq 'makestub';
+    return $class->handle_stub($stub_module, @_)
+        if $cmd eq 'stub';
     return $class->handle_autostub(@_)
         if $cmd eq 'autostub';
     return $class->handle_distdir(@ARGV)
         if $cmd eq 'distdir';
     return $class->handle_fixblib()
         if $cmd eq 'fixblib';
-
-    if ($cmd =~ /^v[0-9]$/) {
-        $class->check_api_version($stub_module, $cmd => @_);
-        no strict 'refs';
-        *{"${stub_module}::import"} = $class->importer($stub_module);
-        return;
-    }
+    return $class->handle_makestub(@_)
+        if $cmd eq 'makestub';
 
     die "Unknown Inline::Module::import argument '$cmd'"
 }
 
 sub check_api_version {
-    my ($class, $stub_module, $api_version, $inline_module_version) = @_;
-    if ($api_version ne 'v1' or $inline_module_version ne $VERSION) {
+    my ($class, $stub_module, $api_version) = @_;
+    if ($api_version ne $API_VERSION) {
         warn <<"...";
 It seems that '$stub_module' is out of date.
-It is using Inline::Module version '$inline_module_version'.
-You have Inline::Module version '$VERSION' installed.
+It is using Inline::Module API version '$api_version'.
+You have Inline::Module API version '$API_VERSION' installed.
 
 Make sure you have the latest version of Inline::Module installed, then run:
 
@@ -177,26 +173,27 @@ sub included_modules {
 #------------------------------------------------------------------------------
 # Class methods.
 #------------------------------------------------------------------------------
+sub handle_stub {
+    my ($class, $stub_module, $api_version) = @_;
+    $class->check_api_version($stub_module, $api_version);
+    no strict 'refs';
+    *{"${stub_module}::import"} = $class->importer($stub_module);
+    return;
+}
+
 sub handle_makestub {
     my ($class, @args) = @_;
 
-    my $dest;
     my @modules;
     for my $arg (@args) {
-        if ($arg eq 'blib') {
-            $dest = 'blib/lib';
-        }
-        elsif ($arg =~ m!/!) {
-            $dest = $arg;
-        }
-        elsif ($arg =~ /::/) {
+        if ($arg =~ /::/) {
             push @modules, $arg;
         }
         else {
             croak "Unknown 'makestub' argument: '$arg'";
         }
     }
-    $dest ||= 'lib';
+    my $dest = 'lib';
 
     for my $module (@modules) {
         my $code = $class->proxy_module($module);
@@ -222,45 +219,26 @@ sub handle_autostub {
     require lib;
     lib->import('lib');
 
-    my ($dest, %autostub_modules);
+    my %autostub_modules;
     for my $arg (@args) {
         if ($arg =~ m!::!) {
             $autostub_modules{$arg} = 1;
-        }
-        elsif ($arg =~ m!(^(b?lib$|mem)$|/)!) {
-            croak "Invalid arg '$arg'. Dest path already set to '$dest'"
-                if $dest;
-            $dest = $arg eq 'blib' ? 'blib/lib' : $arg;
         }
         else {
             croak "Unknown 'autostub' argument: '$arg'";
         }
     }
-    $dest ||= 'mem';
 
     push @INC, sub {
-        my ($self, $module_path) = @_;
+        my ($self, $module) = @_;
         delete $ENV{PERL5OPT};
 
-        my $module = $module_path;
         $module =~ s!\.pm$!!;
         $module =~ s!/!::!g;
         $autostub_modules{$module} or return;
 
-        if ($dest eq 'mem') {
-            my $code = $class->proxy_module($module);
-            open my $fh, '<', \$code;
-            return $fh;
-        }
-
-        my $path = "$dest/$module_path";
-        if (not -e $path) {
-            my $code = $class->proxy_module($module);
-            $class->write_module($dest, $module, $code);
-            print "Created stub module '$path' (Inline::Module $VERSION)\n";
-        }
-
-        open my $fh, '<', $path or die "Can't open '$path' for input:\n$!";
+        my $code = $class->proxy_module($module);
+        open my $fh, '<', \$code;
         return $fh;
     }
 }
@@ -342,11 +320,14 @@ sub proxy_module {
 # This module is for author-side development only. When this module is shipped
 # to CPAN, it will be automagically replaced with content that does not
 # require any Inline framework modules (or any other non-core modules).
+#
+# To regenerate this stub module, run this command:
+#
+#   perl -MInline::Module=makestub,$module
 
 use strict; use warnings;
 package $module;
-use Inline::Module 'v1' => '$VERSION';
-
+use Inline::Module stub => '$API_VERSION';
 1;
 ...
 }
