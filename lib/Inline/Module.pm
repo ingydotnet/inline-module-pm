@@ -34,9 +34,13 @@ sub import {
     my ($stub_module, $program) = caller;
 
     if ($program eq 'Makefile.PL' && not -e 'INLINE.h') {
+        $class->check_inc_inc($program);
         no warnings 'once';
         *MY::postamble = \&postamble;
         return;
+    }
+    elsif ($program eq 'Build.PL') {
+        $class->check_inc_inc($program);
     }
 
     return unless @_;
@@ -72,6 +76,21 @@ Make sure you have the latest version of Inline::Module installed, then run:
         # XXX 'exit' is used to get a cleaner error msg.
         # Try to redo this without 'exit'.
         exit 1;
+    }
+}
+
+sub check_inc_inc {
+    my ($class, $program) = @_;
+    my $first = $INC[0] or die;
+    if ($first !~ /^(\.[\/\\])?inc[\/\\]?$/) {
+        die <<"...";
+First element of \@INC should be 'inc'.
+It's '$first'.
+Add this line to the top of your '$program':
+
+    use lib 'inc';
+
+...
     }
 }
 
