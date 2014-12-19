@@ -1,4 +1,9 @@
 ---
+version: 0.26
+date:    Thu Dec 18 18:04:08 PST 2014
+changes:
+- Patch to make Inline Modules build ok on MSWin32
+---
 version: 0.25
 date:    Thu Dec 18 11:13:47 PST 2014
 changes:

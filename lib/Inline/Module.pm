@@ -1,6 +1,6 @@
 use strict; use warnings;
 package Inline::Module;
-our $VERSION = '0.25';
+our $VERSION = '0.26';
 our $API_VERSION = 'v2';
 
 use Config();
@@ -137,10 +137,10 @@ pure_all ::
 ...
     for my $module (@$code_modules) {
         $section .=
-            "\t\$(NOECHO) \$(ABSPERLRUN) -Iinc -Ilib -e 'use $module'\n";
+            "\t\$(NOECHO) \$(ABSPERLRUN) -Iinc -Ilib -M$module -e 1 --\n";
     }
     $section .=
-        "\t\$(NOECHO) \$(ABSPERLRUN) -Iinc -MInline::Module=fixblib -e 1";
+        "\t\$(NOECHO) \$(ABSPERLRUN) -Iinc -MInline::Module=fixblib -e 1 --\n";
 
     return $section;
 }
