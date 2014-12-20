@@ -302,7 +302,9 @@ sub add_to_distdir {
         $code = $class->proxy_module($module);
         $class->write_module("$distdir/inc", $module, $code);
         $module =~ s!::!/!g;
-        push @$manifest, "lib/$module.pm", "inc/$module.pm";
+        push @$manifest, "lib/$module.pm"
+            unless -e "lib/$module.pm";
+        push @$manifest, "inc/$module.pm";
     }
     for my $module (@$included_modules) {
         my $code = $class->read_local_module($module);
