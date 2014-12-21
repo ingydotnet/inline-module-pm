@@ -68,6 +68,7 @@ This repoository contains the following top level files and directories:
   .git/       - Git repository data.
   lib/        - All the source code libraries (modules).
   note/       - Random note files. To-Do lists, specs, etc.
+  share/      - Shared files for the release package.
 
 Resources
 ---------

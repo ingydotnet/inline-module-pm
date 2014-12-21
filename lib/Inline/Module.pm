@@ -1,6 +1,6 @@
 use strict; use warnings;
 package Inline::Module;
-our $VERSION = '0.26';
+our $VERSION = '0.27';
 our $API_VERSION = 'v2';
 
 use Carp 'croak';
@@ -285,11 +285,14 @@ sub included_modules {
             'Inline::C::Parser::RegExp';
     }
     if (grep /:CPP$/, @$ilsm) {
-        push @$include,
+        push @$include, (
             'Inline::C',
             'Inline::CPP::Config',
             'Inline::CPP::Parser::RecDescent',
-            'Parse::RecDescent';
+            'Parse::RecDescent',
+            'ExtUtils::CppGuess',
+            'Capture::Tiny',
+        );
     }
     return $include;
 }
@@ -391,6 +394,8 @@ bootstrap $module;
 
 sub write_module {
     my ($class, $dest, $module, $code) = @_;
+
+    $code =~ s/\n+__END__\n.*//s;
 
     my $filepath = $module;
     $filepath =~ s!::!/!g;

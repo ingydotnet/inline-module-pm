@@ -1,4 +1,10 @@
 ---
+version: 0.27
+date:    Sun Dec 21 00:28:22 EST 2014
+changes:
+- Add CppGuess support.
+- Probably a temporary solution.
+---
 version: 0.26
 date:    Thu Dec 18 18:04:08 PST 2014
 changes:

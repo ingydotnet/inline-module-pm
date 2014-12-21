@@ -21,6 +21,8 @@ perl:
 install:
 - cpanm --quiet --notest
   Devel::Cover::Report::Coveralls
+  ExtUtils::CppGuess
+  File::Share
   Inline
   Inline::C
 
