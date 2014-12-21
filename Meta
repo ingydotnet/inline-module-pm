@@ -17,6 +17,7 @@ author:
 
 requires:
   perl: 5.8.1
+  File::Share: 0
   Inline: 0
   Inline::C: 0
 

@@ -3,10 +3,11 @@ package Inline::Module;
 our $VERSION = '0.26';
 our $API_VERSION = 'v2';
 
-use Config();
-use File::Path();
-use File::Find();
 use Carp 'croak';
+use Config();
+use File::Find();
+use File::Path();
+use File::Spec();
 
 my $inline_build_path = './blib/Inline';
 
@@ -307,7 +308,9 @@ sub add_to_distdir {
         push @$manifest, "inc/$module.pm";
     }
     for my $module (@$included_modules) {
-        my $code = $class->read_local_module($module);
+        my $code = $module eq 'Inline::CPP::Config'
+        ? $class->read_share_cpp_config
+        : $class->read_local_module($module);
         $class->write_module("$distdir/inc", $module, $code);
         $module =~ s!::!/!g;
         push @$manifest, "inc/$module.pm";
@@ -326,6 +329,18 @@ sub read_local_module {
     my $filepath = $INC{"$file.pm"};
     open IN, '<', $filepath
         or die "Can't open '$filepath' for input:\n$!";
+    my $code = do {local $/; <IN>};
+    close IN;
+    return $code;
+}
+
+sub read_share_cpp_config {
+    my ($class) = @_;
+    require File::Share;
+    my $dir = File::Share::dist_dir('Inline-Module');
+    my $path = File::Spec->catfile($dir, 'CPPConfig.pm');
+    open IN, '<', $path
+        or die "Can't open '$path' for input:\n$!";
     my $code = do {local $/; <IN>};
     close IN;
     return $code;
@@ -405,6 +420,38 @@ sub add_to_manifest {
         }
         close $out;
     }
+}
+
+sub smoke_system_info_dump {
+    my ($class, @msg) = @_;
+    my $msg = sprintf(@msg);
+    chomp $msg;
+    require Data::Dumper;
+    local $Data::Dumper::Sortkeys = 1;
+    local $Data::Dumper::Terse = 1;
+    local $Data::Dumper::Indent = 1;
+
+    my @path_files;
+    File::Find::find({
+        wanted => sub {
+            push @path_files, $File::Find::name if -f;
+        },
+    }, File::Spec->path());
+    my $dump = Data::Dumper::Dumper(
+        {
+            'ENV' => \%ENV,
+            'Config' => \%Config::Config,
+            'Path Files' => \@path_files,
+        },
+    );
+    Carp::confess <<"..."
+Error: $msg
+
+System Data:
+$dump
+
+Error: $msg
+...
 }
 
 1;
