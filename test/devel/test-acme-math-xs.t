@@ -1,34 +1,47 @@
 #!/usr/bin/env bash
 
+source "`dirname $0`/test-module.sh"
 source "`dirname $0`/setup"
 use Test::More
 BAIL_ON_FAIL
 
-git clone $TEST_HOME/../acme-math-xs-pm/.git -b eumm
-cd acme-math-xs-pm
+test_dir=acme-math-xs-pm
+test_repo_url=$TEST_HOME/../acme-math-xs-pm/.git
+test_test_runner=('prove -lv t/')
+test_make_distdir=('perl Makefile.PL' 'make manifest distdir')
+test_inline_build_dir=blib/Inline
 
-{
-  prove -lv t &> out
-  pass "Acme::Math::XS passes its tests"
-}
+test_branch=cpp
+test_module
 
-{
-  perl Makefile.PL
-  ok "`[ -f Makefile ]`" "The Makefile exists after 'perl Makefile.PL'"
-}
+test_branch=dzil
+test_make_distdir=('dzil build')
+test_module
 
-{
-  make
-  ok "`[ -d blib ]`" "The 'blib' dir exists after 'make'"
-}
+test_branch=eumm
+test_make_distdir=('perl Makefile.PL' 'make manifest distdir')
+test_module
 
-{
-  make manifest distdir
-  dd=( Alt-Acme-Math-XS-EUMM-* )
-  ok "`[ -e "$dd/MANIFEST" ]`" "$dd/MANIFEST exists"
-  ok "`[ -e "$dd/inc/Acme/Math/XS/Inline.pm" ]`" \
-    "$dd/inc/Acme/Math/XS/Inline.pm exists"
-}
+test_branch='m-b'
+test_make_distdir=('perl Build.PL' './Build manifest' './Build distdir')
+test_module
+
+test_branch='m-i'
+test_make_distdir=('perl Makefile.PL' 'make manifest distdir')
+test_module
+
+test_branch='xs'
+test_test_runner=('perl Makefile.PL' 'make' 'prove -blv t/')
+test_inline_build_dir=
+test_module
+
+test_branch='zild'
+test_inline_build_dir=blib/Inline
+test_test_runner=('prove -lv test/')
+test_make_distdir=('zild make distdir')
+test_module
 
 done_testing;
 teardown
+
+# vim: set ft=sh:
