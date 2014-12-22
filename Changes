@@ -1,4 +1,9 @@
 ---
+version: 0.28
+date:    Mon Dec 22 15:22:46 PST 2014
+changes:
+- Finish the documentation.
+---
 version: 0.27
 date:    Sun Dec 21 00:28:22 EST 2014
 changes:
