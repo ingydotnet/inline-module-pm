@@ -35,6 +35,11 @@ t() {
 };t
 
 t() {
+  local test_branch=ext
+  test_module
+};t
+
+t() {
   local test_branch='m-b'
   local test_make_distdir=('perl Build.PL' './Build manifest' './Build distdir')
   test_module
