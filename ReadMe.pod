@@ -119,6 +119,48 @@ L<http://news.perlfoundation.org/2014/09/grant-proposal-inlinecpp-modul.html>
 
 =back
 
+Also see these modules made with L<Inline::Module>:
+
+=over
+
+=item * L<Alt::Acme::Math::XS::EUMM>
+
+=over
+
+=item * L<Acme::Math::XS> (Pure XS version)
+
+=back
+
+=item * L<Alt::Acme::Math::XS::CPP>
+
+=item * L<Alt::Acme::Math::XS::DistZilla>
+
+=item * L<Alt::Acme::Math::XS::ModuleBuild>
+
+=item * L<Alt::Acme::Math::XS::ModuleInstall>
+
+=item * L<Alt::Acme::Math::XS::ZillaDist>
+
+=item * L<Alt::Acme::Math::XS::External>
+
+=item * L<Alt::Devel::GlobalDestruction::XS::Inline>
+
+=item * L<Alt::Math::Prime::FastSieve::Inline>
+
+=back
+
+And see these plugins for your favorite module framework:
+
+=over
+
+=item * L<DistZilla::Plugin::InlineModule>
+
+=item * L<Module::Build::InlineModule>
+
+=item * L<Module::Install::InlineModule>
+
+=back
+
 =head1 NOTE
 
 When this module was first created in November 2014, we belatedly realized
