@@ -32,14 +32,16 @@ test_module() {
     for cmd in "${test_make_distdir[@]}"; do
       $cmd &>>out
     done
-    shopt -s nullglob
-    dd=( Alt-Acme-Math-XS-* Acme-Math-XS-* )
+    dd=( $test_dist-* )
+    [ -n "$dd" ] || die
     ok "`[ -e "$dd/MANIFEST" ]`" "$dd/MANIFEST exists"
     ok "`[ ! -e "$dd/MANIFEST.SKIP" ]`" \
       "$dd has no MANIFEST.SKIP"
     if $inline_module; then
-      ok "`[ -e "$dd/inc/Acme/Math/XS/Inline.pm" ]`" \
-        "$dd/inc/Acme/Math/XS/Inline.pm exists"
+      for file in "${test_dist_files[@]}"; do
+        ok "`[ -e "$dd/$file" ]`" \
+          "$dd/$file exists"
+      done
     fi
   }
 
