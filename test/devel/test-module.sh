@@ -54,28 +54,18 @@ test_module() {
           "$dd/$file exists"
       done
     fi
+    (
+      cd $dd
+      if [ -e Build.PL ]; then
+        perl Build.PL &>>../out
+        ./Build test &>>../out
+      else
+        perl Makefile.PL &>>../out
+        make test &>>../out
+      fi
+    )
+    pass "$dd passes its tests"
   }
 
   cd "$test_home"
 }
-
-# {
-#   perl Makefile.PL &>out
-#   ok "`[ -f Makefile ]`" "The Makefile exists after 'perl Makefile.PL'"
-# }
-# 
-# {
-#   make &>out
-#   ok "`[ -d blib ]`" "The 'blib' dir exists after 'make'"
-# }
-# 
-# git clean -dxf &>/dev/null
-# git checkout dzil &>/dev/null
-# 
-# {
-#   dzil test &>out
-#   pass "Alt::Acme::Math::XS::DistZilla passes its tests"
-# }
-# 
-# git clean -dxf &>/dev/null
-# git checkout dzil &>/dev/null

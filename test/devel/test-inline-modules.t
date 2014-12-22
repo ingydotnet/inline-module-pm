@@ -22,58 +22,58 @@ source "$dir/test-module.sh"
   )
 }
 
-t() {
+cpp() {
   local test_branch=cpp
   test_module
-};t
+}
 
-t() {
+dz() {
   local test_branch=dzil
   local test_test_run=('dzil test')
   local test_make_distdir=('dzil build')
   test_module
-};t
+}
 
-t() {
+eumm() {
   local test_branch=eumm
   test_module
-};t
+}
 
-t() {
+ext() {
   local test_branch=ext
   test_module
-};t
+}
 
-t() {
+m-b() {
   local test_branch='m-b'
   local test_test_run=('perl Build.PL' './Build test')
   local test_make_distdir=('perl Build.PL' './Build manifest' './Build distdir')
   test_module
-};t
+}
 
-t() {
+m-i() {
   local test_branch='m-i'
   test_module
-};t
+}
 
-t() {
+xs() {
   local test_branch='xs'
   local test_prove_run=('perl Makefile.PL' 'make' 'prove -blv t/')
   local test_inline_build_dir=
   local test_dist=Acme-Math-XS
   test_module
-};t
+}
 
-t() {
+zd() {
   local test_branch='zild'
   local test_inline_build_dir=blib/Inline
   local test_prove_run=('prove -lv test/')
   local test_test_run=('zild make test')
   local test_make_distdir=('zild make distdir')
   test_module
-};t
+}
 
-t() {
+m-p-fs() {
   local test_dir=Math-Prime-FastSieve
   local test_repo_url=$TEST_HOME/../Math-Prime-FastSieve/.git
   local test_dist=Alt-$test_dir
@@ -84,9 +84,9 @@ t() {
     inc/Math/Prime/FastSieve/Inline.pm
   )
   test_module
-};t
+}
 
-t() {
+d-g-xs() {
   local test_dir=Devel-GlobalDestruction-XS
   local test_repo_url=$TEST_HOME/../Devel-GlobalDestruction-XS/.git
   local test_dist=Alt-$test_dir
@@ -97,7 +97,26 @@ t() {
     inc/Devel/GlobalDestruction/XS/Inline.pm
   )
   test_module
-};t
+}
+
+# You can run specific tests like this:
+# prove -v test/devel/test-inline-modules.t :: dz cpp d-g-xs
+if [ $# -gt 0 ]; then
+  for t in "$@"; do
+    $t
+  done
+else
+  cpp
+  dz
+  eumm
+  ext
+  m-b
+  m-i
+  xs
+  zd
+  m-p-fs
+  d-g-xs
+fi
 
 done_testing;
 teardown
