@@ -1,12 +1,12 @@
 Inline::Module::Tutorial
 ========================
 
-Make "XS" modules for CPAN, the easy way
+Make "XS" modules for CPAN. The easy way!
 
 = Overview
 
 This tutorial will teach you how to write "extension" modules for CPAN using
-[Inline::Module]. The normal way to do this is with "XS", Perl's mechanism for
+[Inline::Module]. The old way to do this is with "XS", Perl's mechanism for
 binding C and C++ code to Perl. Inline::Module lets you do this much easier,
 avoiding the need to learn XS, but delivering results that are as robust as
 hand-written XS.
@@ -21,7 +21,7 @@ this.
 == The Makefile.PL
 
 No matter which framework you use to make modules ([ExtUtils::MakeMaker],
-[Dist::Zilla]) etc, you'll need to add a little metadata to the controls. For
+[Dist::Zilla]) etc, you'll need to add a little *metadata* to the controls. For
 now we'll just show `Makefile.PL` ([ExtUtils::MakeMaker]) way:
 
   use lib 'inc';
@@ -40,9 +40,9 @@ now we'll just show `Makefile.PL` ([ExtUtils::MakeMaker]) way:
     },
   );
 
-So you need to use `Inline::Module` and add a `postamble` section with an
+So you need to `use Inline::Module` and add a `postamble` section with an
 `inline` section (with at least a `module` name) to `WriteMakefile`. The
-arguments specify the information the [Inline::Module] needs to do the right
+arguments specify the information that [Inline::Module] needs to do the right
 things. The `stub` and `ilsm` values above are the defaults, so not really
 needed in that example. All the values for those keys can be either a string or
 an array ref of strings (ie single or multiple values).
@@ -122,7 +122,7 @@ The astute tutorialist will note that this module depends on `Inline::Module`,
 and that's a no-no. That's because this stub is used for author side
 development and testing, and another stub replaces it at module release time.
 
-That stub will look like this:
+The replacement stub will look like this:
 
   use strict; use warnings;
   package Acme::Math::XS::Inline;
@@ -220,9 +220,9 @@ In the `distdir` phase, we need to:
   * Inline::Module
   * Inline
   * Inline::C
-  * a few more helper modules
+  * a few helper modules
 
-We also need to move the test/build `lib/Acme/Math/XS/Inline.pm` under `inc/`
+We also need to move the test\/build stub module under `inc/`
 and put the `Dynaloader` version in its place under `lib`.
 
 The `pure_all` phase is simply tweaked to rearrange the exact location of
@@ -297,25 +297,32 @@ See [Alt::Acme::Math::XS::ModuleInstall] for a working example on CPAN.
 
 Just add these lines to your Meta file:
 
-=zild:
-  inline:
-    module: Acme::Math::XS
-    stub: Acme::Math::XS::Inline
-    ilsm: Inline::C
+  =zild:
+    inline:
+      module: Acme::Math::XS
+      stub: Acme::Math::XS::Inline
+      ilsm: Inline::C
 
 See [Alt::Acme::Math::XS::ZillaDist] for a working example on CPAN.
 
 = External Files
 
-How to do this, but have your C/C++ in external files…
+Putting a lot of C code in your Perl might be too messy. You can just move it
+to a `.c` file, and then change your Perl to this:
 
-= External Libraries
+  use Acme::Math::XS::Inline C => 'lib/Acme/Math/XS.c';
 
-How to write modules that bind exteral libraries (like `libyaml`)…
+Note: You can put the `.c` file anywhere you want, except at the top level.
+Doing that will confuse the Makefile. If you put it under `lib` like above, it
+will get installed like `.pm` files. This might be desirable since it opens all
+your source (just lie when it's actually /inline/).
 
 = Inline::CPP Specifics
 
-Things that change when you use `C++`…
+Under the hood, [Inline::Module] does quite a few things different when you use
+[Inline::CPP], but this should be mostly transparent to you. Just make sure you
+declare your `ilsm` keyword to be `Inline::CPP` and everything should work
+fine.
 
 = Using languages other than `C` and `C++`
 
@@ -328,8 +335,7 @@ Report any issues to: https://github.com/ingydotnet/inline-module-pm/issues
 = Document Status
 
 This document reflects the current state of `Inline::Module`. At this time, it
-is brand new, and thus many sections can't be written yet. This will change
-soon, and this document will be kept up to date with all the changes.
+is brand new, so please report any bugs and/or misgivings.
 
 = Authors
 
