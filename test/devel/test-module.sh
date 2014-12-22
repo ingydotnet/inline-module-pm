@@ -18,10 +18,10 @@ test_module() {
   git checkout "$test_branch" &>/dev/null
 
   {
-    for cmd in "${test_test_runner[@]}"; do
+    for cmd in "${test_prove_run[@]}"; do
       $cmd &>>out
     done
-    pass "Acme::Math::XS ($test_branch) passes its tests"
+    pass "Acme::Math::XS ($test_branch) passes its tests w/ prove"
     if $inline_module; then
       ok "`[ -e "$test_inline_build_dir" ]`" \
         "$test_inline_build_dir exists after testing"
@@ -29,6 +29,17 @@ test_module() {
   }
 
   {
+    git clean -dxf &>/dev/null
+    if [ -n "$test_test_run" ]; then
+      for cmd in "${test_test_run[@]}"; do
+        $cmd &>>out
+      done
+      pass "Acme::Math::XS ($test_branch) passes its test runner"
+    fi
+  }
+
+  {
+    git clean -dxf &>/dev/null
     for cmd in "${test_make_distdir[@]}"; do
       $cmd &>>out
     done
