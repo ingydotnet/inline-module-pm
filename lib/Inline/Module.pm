@@ -1,6 +1,6 @@
 use strict; use warnings;
 package Inline::Module;
-our $VERSION = '0.28';
+our $VERSION = '0.29';
 our $API_VERSION = 'v2';
 
 use Carp 'croak';
@@ -27,7 +27,7 @@ sub import {
 
     my ($stub_module, $program) = caller;
 
-    if ($program eq 'Makefile.PL' && not -e 'INLINE.h') {
+    if ($program =~ m!\bMakefile.PL$! && not -e 'INLINE.h') {
         $class->check_inc_inc($program);
         no warnings 'once';
         *MY::postamble = \&postamble;

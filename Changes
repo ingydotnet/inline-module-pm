@@ -1,4 +1,9 @@
 ---
+version: 0.29
+date:    Tue Dec 23 11:20:23 PST 2014
+changes:
+- Fix bug in some smokers. BinGOs++
+---
 version: 0.28
 date:    Mon Dec 22 15:22:46 PST 2014
 changes:
