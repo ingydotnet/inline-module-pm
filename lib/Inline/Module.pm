@@ -1,6 +1,6 @@
 use strict; use warnings;
 package Inline::Module;
-our $VERSION = '0.29';
+our $VERSION = '0.30';
 our $API_VERSION = 'v2';
 
 use Carp 'croak';
@@ -26,8 +26,9 @@ sub import {
     DEBUG_ON && DEBUG "Inline::Module::import(@_)";
 
     my ($stub_module, $program) = caller;
+    $program =~ s!.*[\\\/]!!;
 
-    if ($program =~ m!\bMakefile.PL$! && not -e 'INLINE.h') {
+    if ($program eq "Makefile.PL" and not -e 'INLINE.h') {
         $class->check_inc_inc($program);
         no warnings 'once';
         *MY::postamble = \&postamble;
@@ -44,12 +45,12 @@ sub import {
         if $cmd eq 'stub';
     return $class->handle_autostub(@_)
         if $cmd eq 'autostub';
+    return $class->handle_makestub(@_)
+        if $cmd eq 'makestub';
     return $class->handle_distdir(@ARGV)
         if $cmd eq 'distdir';
     return $class->handle_fixblib()
         if $cmd eq 'fixblib';
-    return $class->handle_makestub(@_)
-        if $cmd eq 'makestub';
 
     die "Unknown Inline::Module::import argument '$cmd'"
 }
@@ -128,6 +129,10 @@ sub postamble {
     my $stub_modules = $meta->{stub};
     my $included_modules = $class->included_modules($meta);
 
+    if ($meta->{makestub} and not -e 'inc' and not -e 'INLINE.h') {
+        $class->make_stub_modules(@{$meta->{stub}});
+    }
+
     my $section = <<"...";
 distdir : distdir_inline
 
@@ -169,13 +174,8 @@ sub handle_makestub {
             croak "Unknown 'makestub' argument: '$arg'";
         }
     }
-    my $dest = 'lib';
 
-    for my $module (@modules) {
-        my $code = $class->proxy_module($module);
-        my $path = $class->write_module($dest, $module, $code);
-        print "Created stub module '$path' (Inline::Module $VERSION)\n";
-    }
+    $class->make_stub_modules(@modules);
 
     exit 0;
 }
@@ -324,17 +324,24 @@ sub add_to_distdir {
     return $manifest; # return a list of the files added
 }
 
+sub make_stub_modules {
+    my ($class, @modules) = @_;
+
+    for my $module (@modules) {
+        my $code = $class->proxy_module($module);
+        my $path = $class->write_module('lib', $module, $code, 'onchange');
+        if ($path) {
+            print "Created stub module '$path' (Inline::Module $VERSION)\n";
+        }
+    }
+}
+
 sub read_local_module {
     my ($class, $module) = @_;
     eval "require $module; 1" or die $@;
     my $file = $module;
     $file =~ s!::!/!g;
-    my $filepath = $INC{"$file.pm"};
-    open IN, '<', $filepath
-        or die "Can't open '$filepath' for input:\n$!";
-    my $code = do {local $/; <IN>};
-    close IN;
-    return $code;
+    $class->read_file($INC{"$file.pm"});
 }
 
 sub read_share_cpp_config {
@@ -342,11 +349,7 @@ sub read_share_cpp_config {
     require File::Share;
     my $dir = File::Share::dist_dir('Inline-Module');
     my $path = File::Spec->catfile($dir, 'CPPConfig.pm');
-    open IN, '<', $path
-        or die "Can't open '$path' for input:\n$!";
-    my $code = do {local $/; <IN>};
-    close IN;
-    return $code;
+    $class->read_file($path);
 }
 
 sub proxy_module {
@@ -392,8 +395,18 @@ bootstrap $module;
 # bootstrap $module \$VERSION;
 }
 
+sub read_file {
+    my ($class, $filepath) = @_;
+    open IN, '<', $filepath
+        or die "Can't open '$filepath' for input:\n$!";
+    my $code = do {local $/; <IN>};
+    close IN;
+    return $code;
+}
+
 sub write_module {
-    my ($class, $dest, $module, $code) = @_;
+    my ($class, $dest, $module, $code, $onchange) = @_;
+    $onchange ||= 0;
 
     $code =~ s/\n+__END__\n.*//s;
 
@@ -403,6 +416,10 @@ sub write_module {
     my $dirpath = $filepath;
     $dirpath =~ s!(.*)/.*!$1!;
     File::Path::mkpath($dirpath);
+
+    return if $onchange and
+        -e $filepath and
+        $class->read_file($filepath) eq $code;
 
     unlink $filepath;
     open OUT, '>', $filepath
