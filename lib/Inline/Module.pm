@@ -134,6 +134,9 @@ sub postamble {
     }
 
     my $section = <<"...";
+clean ::
+\t- \$(RM_RF) $inline_build_path
+
 distdir : distdir_inline
 
 distdir_inline : create_distdir
