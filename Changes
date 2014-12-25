@@ -1,6 +1,6 @@
 ---
 version: 0.30
-date:    Tue Dec 23 20:21:00 PST 2014
+date:    Thu Dec 25 00:18:18 PST 2014
 changes:
 - Normalize $program
 - Add `makestub` meta keyword
