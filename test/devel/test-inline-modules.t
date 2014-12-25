@@ -13,7 +13,7 @@ source "$dir/test-module.sh"
   test_prove_run=('prove -lv t/')
   test_test_run=('perl Makefile.PL' 'make test')
   test_make_distdir=('perl Makefile.PL' 'make manifest distdir')
-  test_inline_build_dir=blib/Inline
+  test_inline_build_dir=.inline
   test_dist=Alt-Acme-Math-XS
   test_dist_files=(
     MANIFEST
@@ -66,7 +66,6 @@ xs() {
 
 zd() {
   local test_branch='zild'
-  local test_inline_build_dir=blib/Inline
   local test_prove_run=('prove -lv test/')
   local test_test_run=('zild make test')
   local test_make_distdir=('zild make distdir')

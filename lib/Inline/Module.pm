@@ -9,7 +9,7 @@ use File::Find();
 use File::Path();
 use File::Spec();
 
-my $inline_build_path = './blib/Inline';
+my $inline_build_path = '.inline';
 
 use constant DEBUG_ON => $ENV{PERL_INLINE_MODULE_DEBUG} ? 1 : 0;
 sub DEBUG { if (DEBUG_ON) { print "DEBUG >>> ", sprintf(@_), "\n" }}
