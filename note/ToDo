@@ -11,8 +11,6 @@
 - Find out why `make test` invokes Inline::Module in a distdir
   - Only `make` should do that
 
-- Disable autostub when inc/ exists (ie during distdir time)
-
 == Soon
 
 - Check VERSION in XS

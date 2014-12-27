@@ -23,6 +23,9 @@ In `Makefile.PL`:
     postamble => {
       inline => {
         module => 'Acme::Math::XS',
+        stub => 'Acme::Math::XS::Inline',
+        ilsm => 'Inline::C',
+        makestub => 1,
       },
     },
   );
@@ -69,22 +72,34 @@ Arguments are key/value pairs.
   using. It defaults to [Inline::C]. It can be an array ref of multiple
   ilsm-s.
 
+- `makestub`
+
+    makestub => 1,
+
+  This will cause the stubs to be updated every time the `Makefile.PL` is run.
+
 = Stub Module Generation
 
 During development, [Inline::Module] needs to generate /stub/ modules. For the
 case in the synopsis, it would need to generate `Acme::Math::XS::Inline`.
-There a few similar but different ways to do this:
+There a couple ways to do this. The explicit way is:
 
   perl -MInline::Module=makestub,Acme::Math::XS::Inline
 
-or:
+You can also add `makestub => 1` to your `Makefile.PL` inline section. Every
+time you run `perl Makefile.PL` as an author, the stubs will be generated under
+the `lib/` directory.
 
-  export PERL5OPT='-MInline::Module=autostub'
-  prove -lv t/
+= Generated Files
 
-or:
+When Inline is invoked it will use the `.inline/` directory to do it. This is
+temporary build cache directory. You may want to add `.inline/` to your
+`.gitignore` (or similar) file.
 
-  perl Makefile.PL
+You may also want to add the stub file paths to `.gitignore`. You may also want
+to consider committing them. Even though they are generated code, they are very
+small and should almost never change. Committing them may be easier for your
+collaborating developers.
 
 = TPF Grant
 

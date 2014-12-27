@@ -10,15 +10,6 @@ BAIL_ON_FAIL
   rm -fr lib
 }
 
-{
-  (
-    export PERL5OPT=-MInline::Module=autostub,Foo::Bar
-    perl -e 'use Foo::Bar'
-  )
-  pass "Stub was auto-generated as IO::String object"
-  # ok "`[ ! -e lib ] && [ ! -e blib ]`" "Neither lib nor blib exist"
-}
-
 done_testing
 teardown
 
