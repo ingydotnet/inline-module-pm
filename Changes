@@ -1,4 +1,9 @@
 ---
+version: 0.31
+date:    Fri Dec 26 19:02:07 PST 2014
+changes:
+- Remove/deprecate sutostubbing
+---
 version: 0.30
 date:    Thu Dec 25 00:18:18 PST 2014
 changes:
