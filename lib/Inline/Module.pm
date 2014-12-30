@@ -1,6 +1,6 @@
 use strict; use warnings;
 package Inline::Module;
-our $VERSION = '0.31';
+our $VERSION = '0.32';
 our $API_VERSION = 'v2';
 
 use Carp 'croak';
@@ -233,10 +233,12 @@ sub default_meta {
     $meta->{stub} = [ $meta->{stub} ] unless ref $meta->{stub};
     $meta->{ilsm} ||= 'Inline::C';
     $meta->{ilsm} = [ $meta->{ilsm} ] unless ref $meta->{ilsm};
+    $meta->{bundle} = 1 unless defined $meta->{bundle};
 }
 
 sub included_modules {
     my ($class, $meta) = @_;
+    return [] if not $meta->{bundle};
     my $ilsm = $meta->{ilsm};
     my $include = [
         'Inline',

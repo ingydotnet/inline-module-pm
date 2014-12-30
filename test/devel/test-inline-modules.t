@@ -20,6 +20,7 @@ source "$dir/test-module.sh"
     lib/Acme/Math/XS.pm
     inc/Acme/Math/XS/Inline.pm
   )
+  test_no_bundle=false
 }
 
 cpp() {
@@ -98,6 +99,20 @@ d-g-xs() {
   test_module
 }
 
+u-t() {
+  local test_dir=Unicode-Truncate
+  local test_repo_url=$TEST_HOME/../Unicode-Truncate/.git
+  local test_dist=$test_dir
+  local test_branch='master'
+  local test_dist_files=(
+    MANIFEST
+    lib/Unicode/Truncate.pm
+    inc/Unicode/Truncate/Inline.pm
+  )
+  local test_no_bundle=true
+  test_module
+}
+
 # You can run specific tests like this:
 # prove -v test/devel/test-inline-modules.t :: dz cpp d-g-xs
 if [ $# -gt 0 ]; then
@@ -115,6 +130,7 @@ else
   zd
   m-p-fs
   d-g-xs
+  u-t
 fi
 
 done_testing;

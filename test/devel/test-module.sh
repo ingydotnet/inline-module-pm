@@ -65,6 +65,11 @@ test_module() {
       fi
     )
     pass "$dd passes its tests"
+
+    if $test_no_bundle; then
+        ok "`[ ! -e "$dd/inc/Inline/Module.pm" ]`" \
+          "Inline::Module is not bundled in inc/"
+    fi
   }
 
   cd "$test_home"

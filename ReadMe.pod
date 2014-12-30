@@ -88,6 +88,16 @@ using. It defaults to L<Inline::C>. It can be an array ref of multiple ilsm-s.
 
 This will cause the stubs to be updated every time the C<Makefile.PL> is run.
 
+=item C<bundle>
+
+    bundle => 0,
+
+By default Inline::Module will bundle all the dependencies under your
+distribution's C<inc/> directory. Setting this option to 0 will disable
+that, but then you are responsible for declaring all the dependencies
+yourself. Do this with the knowledge that if Inline::* APIs change, your
+distribution may break.
+
 =back
 
 =head1 STUB MODULE GENERATION
