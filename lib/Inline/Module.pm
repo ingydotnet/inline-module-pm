@@ -1,6 +1,6 @@
 use strict; use warnings;
 package Inline::Module;
-our $VERSION = '0.32';
+our $VERSION = '0.33';
 our $API_VERSION = 'v2';
 
 use Carp 'croak';

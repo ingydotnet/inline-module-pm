@@ -1,9 +1,4 @@
-Inline::Module
-==============
-
-Support for Inline-based CPAN Extension Modules
-
-<badge travis coveralls ingydotnet/inline-module-pm>
+<<<cpan-head>>>
 
 = Synopsis
 
@@ -118,7 +113,7 @@ Foundation grant:
 
 http://news.perlfoundation.org/2014/09/grant-proposal-inlinecpp-modul.html
 
-= See
+= See Also
 
 * [Inline::Module::Tutorial]
 * [Inline]
@@ -152,16 +147,4 @@ there was already an Inline::Module on CPAN, by Ingy. The other one is to
 but if that is not the case, contact INGY and he'll redo that one under another
 name.
 
-= Authors
-
-* Ingy döt Net <ingy@cpan.org>
-* David Oswald <davido@cpan.org>
-
-= Copyright
-
-Copyright 2014. Ingy döt Net.
-
-This program is free software; you can redistribute it and/or modify it under
-the same terms as Perl itself.
-
-See http://www.perl.com/perl/misc/Artistic.html
+<<<cpan-tail>>>
