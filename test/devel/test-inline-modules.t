@@ -113,6 +113,22 @@ u-t() {
   test_module
 }
 
+s-s() {
+  local test_dir=string-slice-pm
+  local test_repo_url=$TEST_HOME/../string-slice-pm/.git
+  local test_dist=String-Slice
+  local test_branch='master'
+  local test_dist_files=(
+    MANIFEST
+    lib/String/Slice.pm
+    inc/String/Slice/Inline.pm
+  )
+  test_prove_run=('prove -lv test/')
+  test_test_run=('zild disttest')
+  test_make_distdir=('zild distdir')
+  test_module
+}
+
 # You can run specific tests like this:
 # prove -v test/devel/test-inline-modules.t :: dz cpp d-g-xs
 if [ $# -gt 0 ]; then
@@ -131,6 +147,7 @@ else
   m-p-fs
   d-g-xs
   u-t
+  s-s
 fi
 
 done_testing;
