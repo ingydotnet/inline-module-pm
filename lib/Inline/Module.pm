@@ -12,7 +12,7 @@ use File::Spec();
 my $inline_build_path = '.inline';
 
 use constant DEBUG_ON => $ENV{PERL_INLINE_MODULE_DEBUG} ? 1 : 0;
-sub DEBUG { if (DEBUG_ON) { print "DEBUG >>> ", sprintf(@_), "\n" }}
+sub DEBUG { if (DEBUG_ON) { print "DEBUG >>> ", sprintf(shift, @_), "\n" }}
 
 #------------------------------------------------------------------------------
 # This import serves multiple roles:
