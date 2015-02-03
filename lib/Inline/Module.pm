@@ -147,10 +147,11 @@ distdir_inline : create_distdir
 \t\$(NOECHO) \$(ABSPERLRUN) -MInline::Module=distdir -e 1 -- \$(DISTVNAME) @$stub_modules -- @$included_modules
 
 pure_all ::
+\t\$(MKPATH) $inline_build_path
 ...
     for my $module (@$code_modules) {
         $section .=
-            "\t\$(NOECHO) \$(ABSPERLRUN) -Iinc -Ilib -M$module -e 1 --\n";
+            "\t\$(NOECHO) \$(ABSPERLRUN) -Iinc -Ilib -MInline=Config,directory,$inline_build_path -M$module -e 1 --\n";
     }
     $section .=
         "\t\$(NOECHO) \$(ABSPERLRUN) -Iinc -MInline::Module=fixblib -e 1 --\n";
