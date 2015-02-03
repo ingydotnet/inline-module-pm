@@ -50,6 +50,8 @@ sub import {
         if $cmd eq 'distdir';
     return $class->handle_fixblib()
         if $cmd eq 'fixblib';
+    return $class->handle_makeblibdyna(@ARGV)
+        if $cmd eq 'makeblibdyna';
 
     # TODO: Deprecated 12/26/2014. Remove this in a month.
     die "Inline::Module 'autostub' no longer supported. " .
@@ -155,6 +157,8 @@ build_inline :
     for my $module (@$code_modules) {
         $section .=
             "\t\$(ABSPERLRUN) -Iinc -Ilib -MInline=Config,directory,$inline_build_path -M$module -e 1 --\n";
+        $section .=
+            "\t\$(ABSPERLRUN) -Iinc -MInline::Module=makeblibdyna -e 1 -- $module\n";
     }
     $section .=
         "\t\$(ABSPERLRUN) -Iinc -MInline::Module=fixblib -e 1 --\n";
@@ -206,6 +210,13 @@ sub handle_distdir {
         push @$included_modules, $_;
     }
     $class->add_to_distdir($distdir, $stub_modules, $included_modules);
+}
+
+sub handle_makeblibdyna {
+    my ($class, $module) = @_;
+    DEBUG_ON && DEBUG "$class->handle_makeblibdyna($module)";
+    my $code = $class->dyna_module("$module\::Inline");
+    $class->write_module("blib/lib", "$module\::Inline", $code);
 }
 
 sub handle_fixblib {
