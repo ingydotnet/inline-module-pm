@@ -146,7 +146,9 @@ distdir : distdir_inline
 distdir_inline : create_distdir
 \t\$(NOECHO) \$(ABSPERLRUN) -MInline::Module=distdir -e 1 -- \$(DISTVNAME) @$stub_modules -- @$included_modules
 
-pure_all ::
+pure_all :: build_inline
+
+build_inline :
 \t\$(MKPATH) $inline_build_path
 ...
     for my $module (@$code_modules) {
