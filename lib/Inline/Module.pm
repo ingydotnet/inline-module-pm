@@ -8,6 +8,7 @@ use Config();
 use File::Find();
 use File::Path();
 use File::Spec();
+use File::Copy();
 
 my $inline_build_path = '.inline';
 
@@ -222,7 +223,9 @@ sub handle_fixblib {
                 my $blib_ext_dir = $blib_ext;
                 $blib_ext_dir =~ s!(.*)/.*!$1! or die;
                 File::Path::mkpath $blib_ext_dir;
-                link $_, $blib_ext;
+                DEBUG_ON && DEBUG "handle_fixblib copy $_ -> $blib_ext";
+                unlink $blib_ext;
+                File::Copy::cp $_, $blib_ext; # not ::copy to preserve perms
             }
         },
         no_chdir => 1,
