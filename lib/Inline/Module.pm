@@ -149,7 +149,7 @@ clean ::
 distdir : distdir_inline
 
 distdir_inline : create_distdir
-\t\$(ABSPERLRUN) -MInline::Module=distdir -e 1 -- \$(DISTVNAME) @$stub_modules -- @$included_modules
+\t\$(ABSPERLRUN) -Iinc -MInline::Module=distdir -e 1 -- \$(DISTVNAME) @$stub_modules -- @$included_modules
 
 # Inline currently only supports dynamic
 dynamic :: build_inline
