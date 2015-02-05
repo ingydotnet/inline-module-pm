@@ -52,6 +52,8 @@ sub import {
         if $cmd eq 'fixblib';
     return $class->handle_makeblibdyna(@ARGV)
         if $cmd eq 'makeblibdyna';
+    return $class->handle_makeblibproxy(@ARGV)
+        if $cmd eq 'makeblibproxy';
 
     # TODO: Deprecated 12/26/2014. Remove this in a month.
     die "Inline::Module 'autostub' no longer supported. " .
@@ -149,12 +151,15 @@ distdir : distdir_inline
 distdir_inline : create_distdir
 \t\$(ABSPERLRUN) -MInline::Module=distdir -e 1 -- \$(DISTVNAME) @$stub_modules -- @$included_modules
 
-pure_all :: build_inline
+# Inline currently only supports dynamic
+dynamic :: build_inline
 
 build_inline :
 \t\$(MKPATH) $inline_build_path
 ...
     for my $module (@$code_modules) {
+        $section .=
+            "\t\$(ABSPERLRUN) -Iinc -MInline::Module=makeblibproxy -e 1 -- $module\n";
         $section .=
             "\t\$(ABSPERLRUN) -Iinc -Ilib -MInline=Config,directory,$inline_build_path -M$module -e 1 --\n";
         $section .=
@@ -216,6 +221,13 @@ sub handle_makeblibdyna {
     my ($class, $module) = @_;
     DEBUG_ON && DEBUG "$class->handle_makeblibdyna($module)";
     my $code = $class->dyna_module("$module\::Inline");
+    $class->write_module("blib/lib", "$module\::Inline", $code);
+}
+
+sub handle_makeblibproxy {
+    my ($class, $module) = @_;
+    DEBUG "$class->handle_makeblibproxy($module)";
+    my $code = $class->proxy_module("$module\::Inline");
     $class->write_module("blib/lib", "$module\::Inline", $code);
 }
 
