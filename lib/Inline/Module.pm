@@ -119,7 +119,7 @@ sub importer {
 #------------------------------------------------------------------------------
 sub postamble {
     my ($makemaker, %args) = @_;
-    DEBUG_ON && DEBUG "Inline::Module::postamble(@_)";
+    DEBUG_ON && DEBUG "Inline::Module::postamble(${\join', ',@_})";
 
     my $meta = $args{inline}
         or croak "'postamble' section requires 'inline' key in Makefile.PL";
@@ -172,7 +172,7 @@ sub handle_stub {
 
 sub handle_makestub {
     my ($class, @args) = @_;
-    DEBUG_ON && DEBUG "$class->handle_makestub(@args)";
+    DEBUG_ON && DEBUG "$class->handle_makestub(${\join', ',@args})";
 
     my @modules;
     for my $arg (@args) {
@@ -191,7 +191,7 @@ sub handle_makestub {
 
 sub handle_distdir {
     my ($class, $distdir, @args) = @_;
-    DEBUG_ON && DEBUG "$class->handle_distdir($distdir, @args)";
+    DEBUG_ON && DEBUG "$class->handle_distdir($distdir, ${\join', ',@args})";
     my $stub_modules = [];
     my $included_modules = [];
 
@@ -206,7 +206,7 @@ sub handle_distdir {
 
 sub handle_fixblib {
     my ($class) = @_;
-    DEBUG_ON && DEBUG "Inline::Module::handle_fixblib(@_)";
+    DEBUG_ON && DEBUG "$class->handle_fixblib()";
     my $ext = $Config::Config{dlext};
     -d 'blib'
         or die "Inline::Module::fixblib expected to find 'blib' directory";
@@ -380,8 +380,9 @@ sub read_file {
 }
 
 sub write_module {
-    my ($class, $dest, $module, $code, $onchange) = @_;
-    DEBUG_ON && DEBUG "write_module(@_)";
+    my $class = shift;
+    my ($dest, $module, $code, $onchange) = @_;
+    DEBUG_ON && DEBUG "$class->write_module(${\join', ',@_})";
     $onchange ||= 0;
 
     $code =~ s/\n+__END__\n.*//s;
