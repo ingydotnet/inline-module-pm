@@ -382,7 +382,7 @@ sub read_file {
 sub write_module {
     my $class = shift;
     my ($dest, $module, $code, $onchange) = @_;
-    DEBUG_ON && DEBUG "$class->write_module(${\join', ',@_})";
+    DEBUG_ON && DEBUG "$class->write_module($dest, $module, ..., $onchange)";
     $onchange ||= 0;
 
     $code =~ s/\n+__END__\n.*//s;
