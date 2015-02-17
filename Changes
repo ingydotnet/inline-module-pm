@@ -1,4 +1,9 @@
 ---
+version: 0.34
+date:    Tue Feb 17 07:17:10 PST 2015
+changes:
+- Fix DEBUG with PR/30. mohawk++
+---
 version: 0.33
 date:    Wed Dec 31 22:33:01 PST 2014
 changes:
