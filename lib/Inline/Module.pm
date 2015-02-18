@@ -164,9 +164,9 @@ build_inline :
             "\t\$(ABSPERLRUN) -Iinc -Ilib -MInline=Config,directory,$inline_build_path -M$module -e 1 --\n";
         $section .=
             "\t\$(ABSPERLRUN) -Iinc -MInline::Module=makeblibdyna -e 1 -- $module\n";
+        $section .=
+            "\t\$(ABSPERLRUN) -Iinc -MInline::Module=fixblib -e 1 --\n";
     }
-    $section .=
-        "\t\$(ABSPERLRUN) -Iinc -MInline::Module=fixblib -e 1 --\n";
 
     return $section;
 }
