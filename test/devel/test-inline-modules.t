@@ -9,6 +9,7 @@ source "$dir/test-module.sh"
 # Default testing values:
 {
   test_dir=acme-math-xs-pm
+  test_author=ingydotnet
   test_repo_url=$TEST_HOME/../acme-math-xs-pm/.git
   test_prove_run=('prove -lv t/')
   test_test_run=('perl Makefile.PL' 'make test')
@@ -129,6 +130,20 @@ s-s() {
   test_module
 }
 
+a-m-x() {
+  local test_dir=Acme-MITHALDU-XSGrabBag
+  local test_author=wchristian
+  local test_repo_url=$TEST_HOME/../Acme-MITHALDU-XSGrabBag/.git
+  local test_dist=Acme-MITHALDU-XSGrabBag
+  local test_branch='master'
+  local test_dist_files=(
+    MANIFEST
+    lib/Acme/MITHALDU/XSGrabBag/Inline.pm
+    lib/Acme/MITHALDU/XSGrabBag.pm
+  )
+  test_module
+}
+
 # You can run specific tests like this:
 # prove -v test/devel/test-inline-modules.t :: dz cpp d-g-xs
 if [ $# -gt 0 ]; then
@@ -148,6 +163,7 @@ else
   d-g-xs
   u-t
   s-s
+  a-m-x
 fi
 
 done_testing;
