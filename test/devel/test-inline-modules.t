@@ -76,6 +76,7 @@ zd() {
 
 m-p-fs() {
   local test_dir=Math-Prime-FastSieve
+  local test_author=daoswald
   local test_repo_url=$TEST_HOME/../Math-Prime-FastSieve/.git
   local test_dist=Alt-$test_dir
   local test_branch='alt-inline'
@@ -95,21 +96,22 @@ d-g-xs() {
   local test_dist_files=(
     MANIFEST
     lib/Devel/GlobalDestruction/XS.pm
-    inc/Devel/GlobalDestruction/XS/Inline.pm
   )
+    # inc/Devel/GlobalDestruction/XS/Inline.pm
   test_module
 }
 
 u-t() {
   local test_dir=Unicode-Truncate
+  local test_author=hoytech
   local test_repo_url=$TEST_HOME/../Unicode-Truncate/.git
   local test_dist=$test_dir
   local test_branch='master'
   local test_dist_files=(
     MANIFEST
     lib/Unicode/Truncate.pm
-    inc/Unicode/Truncate/Inline.pm
   )
+    # inc/Unicode/Truncate/Inline.pm
   local test_no_bundle=true
   test_module
 }
@@ -124,9 +126,9 @@ s-s() {
     lib/String/Slice.pm
     inc/String/Slice/Inline.pm
   )
-  test_prove_run=('prove -lv test/')
-  test_test_run=('zild disttest')
-  test_make_distdir=('zild distdir')
+  local test_prove_run=('prove -lv test/')
+  local test_test_run=('zild disttest')
+  local test_make_distdir=('zild distdir')
   test_module
 }
 

@@ -20,9 +20,21 @@ or rerun this command with the env var:
 ...
         exit 1
       fi
-      git clone "$github_repo" "$test_repo"
+      git clone "$github_repo" "$test_repo" &>out || die "$(cat out)"
+      # Get all remote branches:
+      (
+        cd "$test_repo"
+        git branch -a |
+          cut -c3- |
+          grep ^remotes/ |
+          cut -d' ' -f1 |
+          cut -d/ -f3- |
+          grep -v HEAD |
+          xargs -n1 git checkout -q
+        git checkout -q master
+      )
     fi
-    git clone $test_repo_url &>/dev/null
+    git clone $test_repo_url &>out || die "$(cat out)"
   fi
   [ -e "$test_dir" ] || die "'$test_dir' does not exist"
   local test_home="$(pwd)"
@@ -34,8 +46,8 @@ or rerun this command with the env var:
 
   note "Testing '$test_dir' branch '$test_branch'"
   cd "$test_dir"
-  git clean -dxf &>/dev/null
-  git checkout "$test_branch" &>/dev/null
+  git clean -dxf &>out || die "$(cat out)"
+  git checkout "$test_branch" &>out || die "$(cat out)"
 
   {
     for cmd in "${test_prove_run[@]}"; do
@@ -49,7 +61,7 @@ or rerun this command with the env var:
   }
 
   {
-    git clean -dxf &>/dev/null
+    git clean -dxf &>out || die "$(cat out)"
     if [ -n "$test_test_run" ]; then
       for cmd in "${test_test_run[@]}"; do
         $cmd &>>out || die "$(cat out)"
@@ -59,7 +71,7 @@ or rerun this command with the env var:
   }
 
   {
-    git clean -dxf &>/dev/null
+    git clean -dxf &>out || die "$(cat out)"
     for cmd in "${test_make_distdir[@]}"; do
       $cmd &>>out || die "$(cat out)"
     done
