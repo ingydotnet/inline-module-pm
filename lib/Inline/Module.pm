@@ -362,6 +362,10 @@ package $module;
 use base 'DynaLoader';
 bootstrap $module;
 1;
+
+=pod
+
+=cut
 ...
 
 # TODO: Add XS VERSION checking support:
