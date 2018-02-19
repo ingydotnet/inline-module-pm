@@ -144,7 +144,7 @@ sub postamble {
 
     my $section = <<"...";
 clean ::
-\t- \$(RM_RF) $inline_build_path
+\t- \$(RM_RF) "$inline_build_path"
 
 distdir : distdir_inline
 
@@ -155,13 +155,13 @@ distdir_inline : create_distdir
 dynamic :: build_inline
 
 build_inline :
-\t\$(MKPATH) $inline_build_path
+\t\$(MKPATH) "$inline_build_path"
 ...
     for my $module (@$code_modules) {
         $section .=
             "\t\$(ABSPERLRUN) -Iinc -MInline::Module=makeblibproxy -e 1 -- $module\n";
         $section .=
-            "\t\$(ABSPERLRUN) -Iinc -Ilib -MInline=Config,directory,$inline_build_path -M$module -e 1 --\n";
+            "\t\$(ABSPERLRUN) -Iinc -Ilib \"-MInline=Config,directory,$inline_build_path\" -M$module -e 1 --\n";
         $section .=
             "\t\$(ABSPERLRUN) -Iinc -MInline::Module=makeblibdyna -e 1 -- $module\n";
         $section .=
