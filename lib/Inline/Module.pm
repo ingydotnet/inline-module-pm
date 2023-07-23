@@ -361,6 +361,7 @@ use strict; use warnings;
 package $module;
 use base 'DynaLoader';
 bootstrap $module;
+sub import {}
 1;
 ...
 
