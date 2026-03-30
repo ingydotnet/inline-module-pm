@@ -1,11 +1,11 @@
-=meta: 0.0.1
+=meta: 0.0.2
 
 name: Inline-Module
-version: 0.34
+version: 0.35
 abstract: Support for Inline-based CPAN Extension Modules
 homepage: https://metacpan.org/release/Inline-Module
 license: perl
-copyright: 2014-2015
+copyright: 2014-2026
 
 author:
   name: Ingy döt Net
@@ -30,5 +30,3 @@ devel:
   git: https://github.com/ingydotnet/inline-module-pm
   bug: https://github.com/ingydotnet/inline-module-pm/issues
   irc: irc.perl.org#inline
-
-badge: travis

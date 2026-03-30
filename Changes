@@ -1,4 +1,9 @@
 ---
+version: 0.35
+date:    Mon Mar 30 07:40:36 AM PDT 2026
+changes:
+- Fix from haarg++ PR/36
+---
 version: 0.34
 date:    Tue Feb 17 07:17:10 PST 2015
 changes:
