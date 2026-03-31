@@ -8,6 +8,7 @@ use Config();
 use File::Find();
 use File::Path();
 use File::Spec();
+use File::Copy();
 
 my $inline_build_path = '.inline';
 
@@ -49,6 +50,10 @@ sub import {
         if $cmd eq 'distdir';
     return $class->handle_fixblib()
         if $cmd eq 'fixblib';
+    return $class->handle_makeblibdyna(@ARGV)
+        if $cmd eq 'makeblibdyna';
+    return $class->handle_makeblibproxy(@ARGV)
+        if $cmd eq 'makeblibproxy';
 
     # TODO: Deprecated 12/26/2014. Remove this in a month.
     die "Inline::Module 'autostub' no longer supported. " .
@@ -139,21 +144,29 @@ sub postamble {
 
     my $section = <<"...";
 clean ::
-\t- \$(RM_RF) $inline_build_path
+\t- \$(RM_RF) "$inline_build_path"
 
 distdir : distdir_inline
 
 distdir_inline : create_distdir
-\t\$(NOECHO) \$(ABSPERLRUN) -MInline::Module=distdir -e 1 -- \$(DISTVNAME) @$stub_modules -- @$included_modules
+\t\$(ABSPERLRUN) -Iinc -MInline::Module=distdir -e 1 -- \$(DISTVNAME) @$stub_modules -- @$included_modules
 
-pure_all ::
+# Inline currently only supports dynamic
+dynamic :: build_inline
+
+build_inline :
+\t\$(MKPATH) "$inline_build_path"
 ...
     for my $module (@$code_modules) {
         $section .=
-            "\t\$(NOECHO) \$(ABSPERLRUN) -Iinc -Ilib -M$module -e 1 --\n";
+            "\t\$(ABSPERLRUN) -Iinc -MInline::Module=makeblibproxy -e 1 -- $module\n";
+        $section .=
+            "\t\$(ABSPERLRUN) -Iinc -Ilib \"-MInline=Config,directory,$inline_build_path\" -M$module -e 1 --\n";
+        $section .=
+            "\t\$(ABSPERLRUN) -Iinc -MInline::Module=makeblibdyna -e 1 -- $module\n";
+        $section .=
+            "\t\$(ABSPERLRUN) -Iinc -MInline::Module=fixblib -e 1 --\n";
     }
-    $section .=
-        "\t\$(NOECHO) \$(ABSPERLRUN) -Iinc -MInline::Module=fixblib -e 1 --\n";
 
     return $section;
 }
@@ -204,6 +217,20 @@ sub handle_distdir {
     $class->add_to_distdir($distdir, $stub_modules, $included_modules);
 }
 
+sub handle_makeblibdyna {
+    my ($class, $module) = @_;
+    DEBUG_ON && DEBUG "$class->handle_makeblibdyna($module)";
+    my $code = $class->dyna_module("$module\::Inline");
+    $class->write_module("blib/lib", "$module\::Inline", $code);
+}
+
+sub handle_makeblibproxy {
+    my ($class, $module) = @_;
+    DEBUG "$class->handle_makeblibproxy($module)";
+    my $code = $class->proxy_module("$module\::Inline");
+    $class->write_module("blib/lib", "$module\::Inline", $code);
+}
+
 sub handle_fixblib {
     my ($class) = @_;
     DEBUG_ON && DEBUG "$class->handle_fixblib()";
@@ -219,7 +246,9 @@ sub handle_fixblib {
                 my $blib_ext_dir = $blib_ext;
                 $blib_ext_dir =~ s!(.*)/.*!$1! or die;
                 File::Path::mkpath $blib_ext_dir;
-                link $_, $blib_ext;
+                DEBUG_ON && DEBUG "handle_fixblib copy $_ -> $blib_ext";
+                unlink $blib_ext;
+                File::Copy::cp $_, $blib_ext; # not ::copy to preserve perms
             }
         },
         no_chdir => 1,
